@@ -1,0 +1,192 @@
+      /* ── Modal ── */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 16px;
+      }
+      .modal {
+        background: #fff;
+        border-radius: 16px;
+        padding: 24px;
+        max-width: 480px;
+        width: 100%;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      }
+      .modal h3 {
+        font-family: 'Fraunces', serif;
+        font-size: 1.2rem;
+        margin-bottom: 8px;
+      }
+      .modal input {
+        width: 100%;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.9rem;
+        margin: 12px 0;
+      }
+      .modal input:focus {
+        outline: none;
+        border-color: #2563eb;
+      }
+
+      /* ── Add Question Form ── */
+      .add-form {
+        background: #fff;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      }
+      .form-group {
+        margin-bottom: 16px;
+      }
+      .form-group label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: #374151;
+      }
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 9px 12px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.88rem;
+      }
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: #2563eb;
+      }
+
+      /* ── Spinner ── */
+      .spinner {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ── Category colors ── */
+      .cat-about-me {
+        background: #fce7f3;
+        color: #9d174d;
+      }
+      .cat-family {
+        background: #ede9fe;
+        color: #5b21b6;
+      }
+      .cat-work {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .cat-school {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+      .cat-health {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .cat-daily {
+        background: #ffedd5;
+        color: #9a3412;
+      }
+      .cat-hobbies {
+        background: #f0fdf4;
+        color: #166534;
+      }
+      .cat-travel {
+        background: #cffafe;
+        color: #155e75;
+      }
+      .cat-food {
+        background: #fef9c3;
+        color: #713f12;
+      }
+      .cat-society {
+        background: #f1f5f9;
+        color: #334155;
+      }
+      .cat-friends {
+        background: #fdf4ff;
+        color: #6b21a8;
+      }
+      .cat-situations {
+        background: #fff7ed;
+        color: #7c2d12;
+      }
+      .cat-opinions {
+        background: #f0f9ff;
+        color: #0c4a6e;
+      }
+
+      /* ── Mobile ── */
+      @media (max-width: 768px) {
+        .sidebar {
+          display: none;
+        }
+        .body-layout {
+          flex-direction: column;
+        }
+        .main-content {
+          padding: 12px;
+        }
+      }
+      @media (max-width: 600px) {
+        .stats-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+        .timer-display {
+          font-size: 2.2rem;
+        }
+      }
+    
+      .pdf-answer-box {
+        background: #f0fdf4;
+        border: 1.5px solid #bbf7d0;
+        border-radius: 10px;
+        margin-top: 10px;
+        overflow: hidden;
+      }
+      .pdf-answer-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        cursor: pointer;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #15803d;
+        user-select: none;
+      }
+      .pdf-answer-toggle:hover { background: #dcfce7; }
+      .pdf-answer-content {
+        padding: 10px 14px 12px;
+        font-size: 0.88rem;
+        line-height: 1.7;
+        color: #1a2235;
+        border-top: 1px solid #bbf7d0;
+      }
+      .pdf-answer-content.hidden { display: none; }
+
+      </style>
