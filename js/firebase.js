@@ -102,19 +102,6 @@
       }
     }
 
-    // Populate payment link in request state
-    if (state === 'request') {
-      const link = _getPaymentLink();
-      const btn  = $('gatePayBtn');
-      if (btn) {
-        if (link) {
-          btn.href = link;
-          btn.style.display = '';
-        } else {
-          btn.style.display = 'none';
-        }
-      }
-    }
   }
 
   function _gateError(msg) {
@@ -181,11 +168,6 @@
       _gateError('Failed to submit request: ' + e.message);
       if (btn) { btn.disabled = false; btn.textContent = "&#128232; I've paid — notify owner"; }
     }
-  }
-
-  // ─── PAYMENT LINK HELPERS (shared with admin.js) ──────────────────────────────
-  function _getPaymentLink() {
-    return localStorage.getItem('norsk-payment-link') || '';
   }
 
   // ─── CLOUD LOAD ───────────────────────────────────────────────────────────────

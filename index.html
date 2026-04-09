@@ -62,15 +62,11 @@
           </div>
         </div>
 
-        <!-- State: no access yet — show payment + request button -->
+        <!-- State: no access yet — request access -->
         <div id="gateRequest" class="hidden">
-          <p class="auth-gate-info">This is a private app. Purchase access to continue.</p>
-          <a id="gatePayBtn" class="auth-gate-pay-btn" href="#" target="_blank" rel="noopener">
-            &#128179; Pay &amp; Get Access
-          </a>
-          <div class="auth-gate-divider">then</div>
+          <p class="auth-gate-info">This app is private. Request access from the owner to continue.</p>
           <button id="gateNotifyBtn" class="auth-gate-notify-btn" onclick="submitAccessRequest()">
-            &#128232; I&rsquo;ve paid &mdash; notify owner
+            &#128232; Request Access
           </button>
           <div class="auth-gate-footer">
             <button class="auth-gate-signout" onclick="handleAuthClick()">Sign out</button>

@@ -93,15 +93,6 @@
               <button class="btn btn-ghost" onclick="renderAdmin()">&#8635; Refresh</button>
             </div>
 
-            <div class="admin-payment-link-row">
-              <label>&#128179; Your payment link:</label>
-              <input class="admin-payment-link-input" id="adminPayLink"
-                placeholder="https://buy.stripe.com/… or razorpay link"
-                value="${_getPaymentLink()}"
-                oninput="_savePaymentLink(this.value)" />
-              <span style="font-size:0.72rem;color:#94a3b8">Shown to users requesting access</span>
-            </div>
-
             <div class="admin-section">
               <div class="admin-section-title">
                 Pending Requests
