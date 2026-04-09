@@ -1,5 +1,4 @@
-  // ─── 1. PASTE YOUR FIREBASE CONFIG HERE ──────────────────────────────────
-  // Get this from: Firebase Console → Project Settings → Your apps → Web app
+  // ─── FIREBASE CONFIG ──────────────────────────────────────────────────────────
   const _FB_CONFIG = {
     apiKey:            "AIzaSyDMxtJKeqlSeBFEnIXm1sX-LrzXKWr_JUI",
     authDomain:        "norsk-b1-tracker-1f540.firebaseapp.com",
@@ -9,25 +8,29 @@
     appId:             "1:592682952498:web:0a55586e643cb64f69192b"
   };
 
-  // ─── 2. INITIALISE FIREBASE ───────────────────────────────────────────────
+  // ─── OWNER CONFIG ─────────────────────────────────────────────────────────────
+  // Replace with your Google account email. Only this email has owner / admin access.
+  const OWNER_EMAIL = 'umaece1311@gmail.com';
+
+  // ─── INIT ─────────────────────────────────────────────────────────────────────
   firebase.initializeApp(_FB_CONFIG);
-  const _auth     = firebase.auth();
-  const _db       = firebase.firestore();
-  const _provider = new firebase.auth.GoogleAuthProvider();
-  let   _fbUser   = null;
+  const _auth      = firebase.auth();
+  const _db        = firebase.firestore();
+  const _provider  = new firebase.auth.GoogleAuthProvider();
+  let   _fbUser    = null;
   let   _syncTimer = null;
 
-  // ─── 3. SYNC DOT (grey=idle, amber=saving, green=ok, red=error) ───────────
+  // ─── SYNC DOT ─────────────────────────────────────────────────────────────────
   function _dot(s) {
     const el = document.getElementById('syncDot');
     if (!el) return;
     const c = { idle:'#94a3b8', pending:'#f59e0b', ok:'#22c55e', err:'#ef4444' };
     const t = { idle:'Not signed in', pending:'Syncing…', ok:'Synced ✓', err:'Sync error' };
     el.style.background = c[s] || c.idle;
-    el.title = t[s] || '';
+    el.title            = t[s] || '';
   }
 
-  // ─── 4. AUTH BUTTON UI ────────────────────────────────────────────────────
+  // ─── AUTH BUTTON (sidebar) ────────────────────────────────────────────────────
   function _updateAuthBtn(user) {
     const btn = document.getElementById('authBtn');
     if (!btn) return;
@@ -35,7 +38,7 @@
       btn.innerHTML = user.photoURL
         ? '<img src="' + user.photoURL + '" style="width:20px;height:20px;border-radius:50%;vertical-align:middle;margin-right:5px">'
           + (user.displayName || 'Account') + ' · Sign out'
-        : '👤 ' + (user.displayName || 'Account') + ' · Sign out';
+        : '&#128100; ' + (user.displayName || 'Account') + ' · Sign out';
       btn.style.background = '#f0fdf4';
       btn.style.color      = '#15803d';
     } else {
@@ -47,59 +50,181 @@
 
   function handleAuthClick() {
     if (_fbUser) {
-      _auth.signOut().then(function() {
-        showToast('Signed out. Progress is still saved locally.');
-        _dot('idle');
-      });
+      _auth.signOut();
     } else {
       _auth.signInWithPopup(_provider).catch(function(e) {
-        showToast('Sign-in failed: ' + e.message);
+        _gateError('Sign-in failed: ' + e.message);
       });
     }
   }
 
-  // ─── 5. LOAD STATE FROM FIRESTORE ────────────────────────────────────────
+  // ─── AUTH GATE UI ─────────────────────────────────────────────────────────────
+  // States: loading | signin | checking | request | pending | denied
+  function _showGate(state, user) {
+    const gate = document.getElementById('authGate');
+    const app  = document.querySelector('.app');
+
+    // Sub-sections
+    const $ = id => document.getElementById(id);
+    const sections = ['gateLoading','gateSignin','gateChecking','gateRequest','gatePending','gateDenied'];
+    sections.forEach(id => {
+      const el = $(id);
+      if (el) el.classList.add('hidden');
+    });
+    _gateError('');
+
+    if (state === 'off') {
+      gate.classList.add('hidden');
+      app.style.display = '';
+      return;
+    }
+
+    gate.classList.remove('hidden');
+    app.style.display = 'none';
+
+    const target = $('gate' + state.charAt(0).toUpperCase() + state.slice(1));
+    if (target) target.classList.remove('hidden');
+
+    // Populate user chip in request/pending/denied states
+    if (user && ['request','pending','denied'].includes(state)) {
+      const chip = $('gateUserChip');
+      if (chip) {
+        chip.querySelector('.auth-gate-user-name').textContent  = user.displayName || 'Unknown';
+        chip.querySelector('.auth-gate-user-email').textContent = user.email;
+        const img = chip.querySelector('img');
+        if (user.photoURL) {
+          img.src = user.photoURL;
+          img.style.display = '';
+        } else {
+          img.style.display = 'none';
+        }
+        chip.classList.remove('hidden');
+      }
+    }
+
+    // Populate payment link in request state
+    if (state === 'request') {
+      const link = _getPaymentLink();
+      const btn  = $('gatePayBtn');
+      if (btn) {
+        if (link) {
+          btn.href = link;
+          btn.style.display = '';
+        } else {
+          btn.style.display = 'none';
+        }
+      }
+    }
+  }
+
+  function _gateError(msg) {
+    const el = document.getElementById('gateError');
+    if (el) el.textContent = msg;
+  }
+
+  // ─── ACCESS CHECK ─────────────────────────────────────────────────────────────
+  async function _checkAccess(user) {
+    // Owner always gets in
+    if (user.email === OWNER_EMAIL) {
+      _showGate('off', user);
+      _loadCloud(user.uid);
+      // Show admin tab
+      const adminBtn = document.getElementById('adminNavBtn');
+      if (adminBtn) adminBtn.style.display = '';
+      return;
+    }
+
+    _showGate('checking', user);
+    try {
+      // Check active access list
+      const accessDoc = await _db.collection('accessList').doc(user.uid).get();
+      if (accessDoc.exists && accessDoc.data().status === 'active') {
+        _showGate('off', user);
+        _loadCloud(user.uid);
+        return;
+      }
+
+      // Check for existing request
+      const reqDoc = await _db.collection('accessRequests').doc(user.uid).get();
+      if (reqDoc.exists) {
+        const status = reqDoc.data().status;
+        if (status === 'pending')  { _showGate('pending',  user); return; }
+        if (status === 'approved') { _showGate('off', user); _loadCloud(user.uid); return; }
+        if (status === 'rejected') { _showGate('denied',   user); return; }
+      }
+
+      // No record — show request access screen
+      _showGate('request', user);
+
+    } catch (e) {
+      _gateError('Error checking access: ' + e.message);
+      _showGate('request', user);
+    }
+  }
+
+  // ─── SUBMIT ACCESS REQUEST (after payment) ────────────────────────────────────
+  async function submitAccessRequest() {
+    if (!_fbUser) return;
+    const btn = document.getElementById('gateNotifyBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Submitting…'; }
+
+    try {
+      await _db.collection('accessRequests').doc(_fbUser.uid).set({
+        email:       _fbUser.email,
+        displayName: _fbUser.displayName || '',
+        photoURL:    _fbUser.photoURL    || '',
+        requestedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        status:      'pending'
+      });
+      _showGate('pending', _fbUser);
+    } catch (e) {
+      _gateError('Failed to submit request: ' + e.message);
+      if (btn) { btn.disabled = false; btn.textContent = "&#128232; I've paid — notify owner"; }
+    }
+  }
+
+  // ─── PAYMENT LINK HELPERS (shared with admin.js) ──────────────────────────────
+  function _getPaymentLink() {
+    return localStorage.getItem('norsk-payment-link') || '';
+  }
+
+  // ─── CLOUD LOAD ───────────────────────────────────────────────────────────────
   async function _loadCloud(uid) {
     _dot('pending');
     try {
       const doc = await _db.collection('users').doc(uid)
                             .collection('data').doc('state').get();
       if (doc.exists) {
-        const remote = doc.data();
-        // Remote wins for learning data; local wins for UI / API key
+        const remote    = doc.data();
         const keepLocal = ['activeCat','activeExamType','activeStatus',
                            'apiKey','todayDate','todayIds'];
-        const merged = Object.assign({}, remote);
+        const merged    = Object.assign({}, remote);
         keepLocal.forEach(function(k) {
           if (state[k] !== undefined) merged[k] = state[k];
         });
-        merged.apiKey = state.apiKey; // never stored in cloud
+        merged.apiKey = state.apiKey;
         state = Object.assign({}, state, merged);
-        // Also update localStorage
         var ts = Object.assign({}, state); delete ts.apiKey;
         localStorage.setItem('norsk-b1-state', JSON.stringify(ts));
         renderSidebar();
         renderToday();
-        showToast('☁ Progress loaded from cloud!', 3000);
+        showToast('&#9729; Progress loaded from cloud!', 3000);
       } else {
-        // First time on this device — push local data to cloud
         await _writeCloud();
-        showToast('☁ Local progress uploaded to cloud!', 3000);
+        showToast('&#9729; Local progress uploaded to cloud!', 3000);
       }
       _dot('ok');
     } catch(e) {
       _dot('err');
-      showToast('⚠ Cloud load failed — using local data.', 3000);
-      console.warn('[Firebase] load error:', e);
+      showToast('&#9888; Cloud load failed — using local data.', 3000);
     }
   }
 
-  // ─── 6. SAVE STATE TO FIRESTORE (runs 3 sec after last saveState call) ───
+  // ─── CLOUD SAVE ───────────────────────────────────────────────────────────────
   async function _writeCloud() {
     if (!_fbUser) return;
     try {
       var toSave = Object.assign({}, state);
-      // Never store these in Firestore
       ['apiKey','activeCat','activeExamType','activeStatus'].forEach(function(k) {
         delete toSave[k];
       });
@@ -109,7 +234,6 @@
       _dot('ok');
     } catch(e) {
       _dot('err');
-      console.warn('[Firebase] write error:', e);
     }
   }
 
@@ -120,20 +244,23 @@
     _syncTimer = setTimeout(_writeCloud, 3000);
   }
 
-  // ─── 7. WRAP saveState SO CLOUD SYNC IS AUTOMATIC ───────────────────────
   var _origSave = saveState;
   saveState = function() {
-    _origSave();       // localStorage always runs first — nothing lost
-    _scheduleSync();   // then queue cloud write if signed in
+    _origSave();
+    _scheduleSync();
   };
 
-  // ─── 8. WATCH AUTH STATE ─────────────────────────────────────────────────
+  // ─── AUTH STATE WATCHER ───────────────────────────────────────────────────────
   _auth.onAuthStateChanged(function(user) {
     _fbUser = user;
     _updateAuthBtn(user);
     if (user) {
-      _loadCloud(user.uid);
+      _checkAccess(user);
     } else {
       _dot('idle');
+      _showGate('signin', null);
+      // Hide admin tab
+      const adminBtn = document.getElementById('adminNavBtn');
+      if (adminBtn) adminBtn.style.display = 'none';
     }
   });
