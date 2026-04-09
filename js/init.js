@@ -3,3 +3,4 @@
       updateAiKeyIndicator();
       renderToday();
       renderSidebar();
+      initAudioDevices();

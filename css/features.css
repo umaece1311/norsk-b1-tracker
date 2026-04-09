@@ -144,6 +144,56 @@
         margin-top: 12px;
       }
 
+      /* ── Mic selector inside pron box ── */
+      .mic-selector-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: #ede9fe;
+        border: 1px solid #c4b5fd;
+        border-radius: 8px;
+        padding: 6px 10px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+      }
+      .mic-selector-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6d28d9;
+        white-space: nowrap;
+      }
+      .mic-selector-select {
+        flex: 1;
+        min-width: 0;
+        font-size: 0.78rem;
+        font-family: 'DM Sans', sans-serif;
+        border: 1px solid #c4b5fd;
+        border-radius: 6px;
+        padding: 4px 8px;
+        background: #fff;
+        color: #4c1d95;
+        cursor: pointer;
+        outline: none;
+      }
+      .mic-selector-select:focus {
+        border-color: #7c3aed;
+      }
+      .mic-selector-btn {
+        background: #7c3aed;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 4px 10px;
+        font-size: 0.82rem;
+        cursor: pointer;
+        font-family: 'DM Sans', sans-serif;
+        flex-shrink: 0;
+        transition: background 0.15s;
+      }
+      .mic-selector-btn:hover {
+        background: #6d28d9;
+      }
+
       /* ── Pronunciation ── */
       .pron-box {
         background: #faf5ff;

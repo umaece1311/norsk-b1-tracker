@@ -100,6 +100,36 @@
             &#10133; Add Question
           </button>
 
+          <!-- Audio Device Selector (Bluetooth headset support) -->
+          <div class="audio-device-panel expanded" id="audioDevicePanel">
+            <div class="audio-device-header" onclick="(function(p){p.classList.toggle('expanded');if(p.classList.contains('expanded'))p.querySelector('.audio-device-body').scrollIntoView({behavior:'smooth',block:'nearest'});})(document.getElementById('audioDevicePanel'))">
+              <span>&#127911; Audio Devices</span>
+              <span class="audio-device-chevron">&#9660;</span>
+            </div>
+            <div class="audio-device-body">
+              <div id="audioDeviceStatus" class="audio-device-status"></div>
+              <div class="audio-device-row">
+                <label>&#127908; Microphone (input)</label>
+                <select id="micSelect" onchange="onMicChange(this.value)">
+                  <option value="">Default microphone</option>
+                </select>
+              </div>
+              <div id="speakerSelectWrap" class="audio-device-row" style="display:none">
+                <label>&#128266; Speakers (output)</label>
+                <select id="speakerSelect" onchange="onSpeakerChange(this.value)">
+                  <option value="">Default speakers</option>
+                </select>
+              </div>
+              <button onclick="refreshAudioDevices()" class="audio-device-refresh">
+                &#8635; Scan Devices
+              </button>
+              <div style="font-size:0.68rem;color:#64748b;margin-top:6px;line-height:1.4">
+                Connect Bluetooth headset first, then tap <strong style="color:#94a3b8">Scan Devices</strong>.<br>
+                Speaker routing: Chrome/Edge only.
+              </div>
+            </div>
+          </div>
+
           <div class="sidebar-section-label">Categories</div>
 
           <button
@@ -669,6 +699,7 @@
     <script src="js/ui/modal.js"></script>
 
     <!-- Features -->
+    <script src="js/features/audio-devices.js"></script>
     <script src="js/features/tts.js"></script>
     <script src="js/features/translation.js"></script>
     <script src="js/features/pronunciation.js"></script>

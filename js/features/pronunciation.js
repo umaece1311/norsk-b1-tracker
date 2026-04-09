@@ -83,7 +83,7 @@
         // Request microphone
         let stream;
         try {
-          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          stream = await navigator.mediaDevices.getUserMedia(getMicConstraints());
         } catch (err) {
           document.getElementById('recStatus-' + id).textContent =
             '❌ Microphone access denied. Please allow microphone in your browser.';
@@ -114,6 +114,7 @@
           const player = document.getElementById('audioPlayer-' + id);
           if (player) {
             player.src = url;
+            applyAudioOutput(player);
           }
           document.getElementById('audioPlayback-' + id).classList.add('show');
           document.getElementById('replayBtn-' + id).style.display = '';

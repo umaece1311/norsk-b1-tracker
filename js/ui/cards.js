@@ -67,6 +67,13 @@
     </div>
     <div id="pron-${q.id}" class="hidden pron-box">
       <h4>🎤 Pronunciation Check <span style="font-weight:400;color:#a78bfa;font-size:0.75rem">(100% free · no API key · Chrome/Edge)</span></h4>
+      <div class="mic-selector-row">
+        <span class="mic-selector-label">🎧 Mic / headset:</span>
+        <select class="mic-selector-select" id="pronMicSelect-${q.id}" onchange="onMicChange(this.value); syncAllMicSelects(this.value)">
+          <option value="">Default microphone</option>
+        </select>
+        <button class="mic-selector-btn" onclick="populatePronMic(${q.id})">↻</button>
+      </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:center">
         <button class="btn btn-green" id="recBtn-${q.id}" onclick="startRecording(${q.id})">⏺ Start Recording</button>
         <button class="btn btn-danger hidden" id="stopBtn-${q.id}" onclick="stopRecording(${q.id})">⏹ Stop &amp; Analyse</button>

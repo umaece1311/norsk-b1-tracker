@@ -422,3 +422,91 @@
         color: #888;
       }
 
+      /* ── Audio Device Selector (Bluetooth headset) ── */
+      .audio-device-panel {
+        background: #f5f3ff;
+        border: 1.5px solid #c4b5fd;
+        border-radius: 10px;
+        margin-top: 10px;
+        overflow: hidden;
+      }
+      .audio-device-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #5b21b6;
+        cursor: pointer;
+        user-select: none;
+        transition: background 0.15s;
+      }
+      .audio-device-header:hover {
+        background: #ede9fe;
+      }
+      .audio-device-chevron {
+        font-size: 0.65rem;
+        color: #a78bfa;
+        transition: transform 0.2s;
+      }
+      .audio-device-panel.expanded .audio-device-chevron {
+        transform: rotate(180deg);
+      }
+      .audio-device-body {
+        display: none;
+        padding: 4px 12px 12px;
+        border-top: 1px solid #ddd6fe;
+      }
+      .audio-device-panel.expanded .audio-device-body {
+        display: block;
+      }
+      .audio-device-status {
+        font-size: 0.7rem;
+        color: #7c3aed;
+        min-height: 14px;
+        margin-bottom: 6px;
+        font-style: italic;
+      }
+      .audio-device-row {
+        margin-bottom: 8px;
+      }
+      .audio-device-row label {
+        display: block;
+        font-size: 0.72rem;
+        color: #6d28d9;
+        font-weight: 500;
+        margin-bottom: 4px;
+      }
+      .audio-device-row select {
+        width: 100%;
+        background: #fff;
+        color: #3b0764;
+        border: 1.5px solid #c4b5fd;
+        border-radius: 6px;
+        padding: 5px 8px;
+        font-size: 0.78rem;
+        font-family: 'DM Sans', sans-serif;
+        cursor: pointer;
+        outline: none;
+      }
+      .audio-device-row select:focus {
+        border-color: #7c3aed;
+      }
+      .audio-device-refresh {
+        width: 100%;
+        background: #7c3aed;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 6px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: 'DM Sans', sans-serif;
+        transition: background 0.15s;
+      }
+      .audio-device-refresh:hover {
+        background: #6d28d9;
+      }
+
