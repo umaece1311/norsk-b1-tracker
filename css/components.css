@@ -433,7 +433,6 @@
       .audio-device-header {
         display: flex;
         align-items: center;
-        justify-content: space-between;
         padding: 8px 12px;
         font-size: 0.8rem;
         font-weight: 600;
@@ -442,20 +441,24 @@
         user-select: none;
         transition: background 0.15s;
       }
+      .audio-device-header > span:first-child {
+        flex: 1;
+      }
       .audio-device-header:hover {
         background: #ede9fe;
       }
       .audio-device-chevron {
-        font-size: 0.65rem;
+        font-size: 0.72rem;
         color: #a78bfa;
         transition: transform 0.2s;
+        margin-left: 6px;
       }
       .audio-device-panel.expanded .audio-device-chevron {
         transform: rotate(180deg);
       }
       .audio-device-body {
         display: none;
-        padding: 4px 12px 12px;
+        padding: 10px 12px 12px;
         border-top: 1px solid #ddd6fe;
       }
       .audio-device-panel.expanded .audio-device-body {
@@ -464,19 +467,22 @@
       .audio-device-status {
         font-size: 0.7rem;
         color: #7c3aed;
-        min-height: 14px;
-        margin-bottom: 6px;
         font-style: italic;
+        margin-bottom: 8px;
+        padding-top: 2px;
+        min-height: 16px;
       }
       .audio-device-row {
-        margin-bottom: 8px;
+        margin-bottom: 10px;
       }
       .audio-device-row label {
-        display: block;
+        display: flex;
+        align-items: center;
+        gap: 4px;
         font-size: 0.72rem;
         color: #6d28d9;
-        font-weight: 500;
-        margin-bottom: 4px;
+        font-weight: 600;
+        margin-bottom: 5px;
       }
       .audio-device-row select {
         width: 100%;
@@ -484,7 +490,7 @@
         color: #3b0764;
         border: 1.5px solid #c4b5fd;
         border-radius: 6px;
-        padding: 5px 8px;
+        padding: 6px 8px;
         font-size: 0.78rem;
         font-family: 'DM Sans', sans-serif;
         cursor: pointer;
@@ -499,12 +505,13 @@
         color: #fff;
         border: none;
         border-radius: 6px;
-        padding: 6px;
+        padding: 7px;
         font-size: 0.78rem;
         font-weight: 600;
         cursor: pointer;
         font-family: 'DM Sans', sans-serif;
         transition: background 0.15s;
+        margin-top: 2px;
       }
       .audio-device-refresh:hover {
         background: #6d28d9;
