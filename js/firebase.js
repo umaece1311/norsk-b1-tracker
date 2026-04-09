@@ -251,7 +251,14 @@
   };
 
   // ─── AUTH STATE WATCHER ───────────────────────────────────────────────────────
+  // Fallback: if Firebase hasn't resolved auth within 5s, show the sign-in screen
+  var _authResolved = false;
+  setTimeout(function() {
+    if (!_authResolved) _showGate('signin', null);
+  }, 5000);
+
   _auth.onAuthStateChanged(function(user) {
+    _authResolved = true;
     _fbUser = user;
     _updateAuthBtn(user);
     if (user) {
