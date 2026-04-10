@@ -73,6 +73,10 @@
       function togglePronunciation(id) {
         const box = document.getElementById('pron-' + id);
         box.classList.toggle('hidden');
+        // Auto-scan devices when box is opened so Bluetooth headset appears immediately
+        if (!box.classList.contains('hidden')) {
+          populatePronMic(id);
+        }
       }
 
       async function startRecording(id) {

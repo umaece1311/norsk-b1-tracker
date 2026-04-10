@@ -68,18 +68,20 @@
 
       function _fillSelect(sel, mics) {
         if (!sel) return;
-        const prev = _selectedMicId || sel.value;
-        sel.innerHTML = mics
-          .map((d, i) => `<option value="${d.deviceId}">${d.label || 'Microphone ' + (i + 1)}</option>`)
-          .join('');
-        if (!sel.innerHTML) {
-          sel.innerHTML = '<option value="">Default microphone</option>';
-          return;
-        }
+        const prev = _selectedMicId || '';
+        // Always keep "Default" as first option so user consciously picks Bluetooth
+        sel.innerHTML = '<option value="">🎙 Default (system mic)</option>'
+          + mics
+              .filter(d => d.deviceId && d.deviceId !== 'default' && d.deviceId !== 'communications')
+              .map(d => `<option value="${d.deviceId}">${d.label || 'Microphone'}</option>`)
+              .join('');
+        // Restore previous selection if still available
         if (prev && sel.querySelector(`option[value="${prev}"]`)) {
           sel.value = prev;
+        } else {
+          sel.value = '';
+          _selectedMicId = null;
         }
-        if (!_selectedMicId) _selectedMicId = sel.value || null;
       }
 
       function _populateSpeakerSelect() {
@@ -139,7 +141,9 @@
 
       function getMicConstraints() {
         if (_selectedMicId) {
-          return { audio: { deviceId: { exact: _selectedMicId } } };
+          // Use the specifically selected device (e.g. Bluetooth headset)
+          return { audio: { deviceId: { ideal: _selectedMicId } } };
         }
+        // No device selected — use system default
         return { audio: true };
       }
