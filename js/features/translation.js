@@ -45,51 +45,80 @@
         return el.value;
       }
 
+      // AbortController with timeout — works in all browsers
+      function _fetchWithTimeout(url, ms) {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), ms);
+        return fetch(url, { signal: ctrl.signal })
+          .then(r => { clearTimeout(timer); return r; })
+          .catch(e => { clearTimeout(timer); throw e; });
+      }
+
       async function freeTranslateChunk(text, from, to) {
         const key = `${from}|${to}|${text}`;
         if (_transCache[key]) return { text: _transCache[key], api: 'cache' };
 
-        // ── 1. Google Translate (unofficial, no key needed) ────────────────
+        // ── 1. Google Translate (unofficial, no key, CORS-friendly) ───────
         try {
-          const gFrom = from === 'no' ? 'no' : from;
-          const gTo   = to   === 'no' ? 'no' : to;
-          const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${gFrom}&tl=${gTo}&dt=t&q=${encodeURIComponent(text)}`;
-          const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
-          const d = await r.json();
-          // Response: [ [ ["translated","original",...], ... ], null, "detected_lang" ]
+          // Use 'nb' (Bokmål) for Norwegian — Google recognises it better
+          const sl  = from === 'no' ? 'nb' : from;
+          const tl  = to   === 'no' ? 'nb' : to;
+          const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
+          const r   = await _fetchWithTimeout(url, 7000);
+          // Use .text() then JSON.parse for wider browser compatibility
+          const raw = await r.text();
+          const d   = JSON.parse(raw);
           if (Array.isArray(d) && Array.isArray(d[0])) {
-            const translated = d[0].map(seg => seg[0] || '').join('');
+            const translated = d[0]
+              .map(seg => (Array.isArray(seg) ? seg[0] : '') || '')
+              .join('');
             if (translated.trim()) {
               const decoded = decodeHtmlEntities(translated);
               _transCache[key] = decoded;
               return { text: decoded, api: 'Google' };
             }
           }
-        } catch (_) {
-          /* fall through */
+        } catch (e) {
+          console.warn('[translate] Google failed:', e.message);
         }
 
-        // ── 2. MyMemory (fallback) ─────────────────────────────────────────
+        // ── 2. MyMemory (fallback, 5 000 chars/day anonymous) ─────────────
         try {
           const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${from}|${to}`;
-          const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
-          const d = await r.json();
+          const r   = await _fetchWithTimeout(url, 8000);
+          const d   = await r.json();
+          const t   = d.responseData?.translatedText || '';
           if (
             d.responseStatus === 200 &&
-            d.responseData?.translatedText &&
-            !d.responseData.translatedText.includes('QUERY LENGTH LIMIT')
+            t &&
+            !t.includes('QUERY LENGTH LIMIT') &&
+            !t.includes('MYMEMORY WARNING')
           ) {
-            const decoded = decodeHtmlEntities(d.responseData.translatedText);
+            const decoded = decodeHtmlEntities(t);
             _transCache[key] = decoded;
             return { text: decoded, api: 'MyMemory' };
           }
-        } catch (_) {
-          /* fall through */
+        } catch (e) {
+          console.warn('[translate] MyMemory failed:', e.message);
         }
 
-        throw new Error(
-          'Translation unavailable. Check your internet connection.'
-        );
+        // ── 3. Lingva mirror (open-source Google proxy) ────────────────────
+        try {
+          const lFrom = from === 'no' ? 'nb' : from;
+          const lTo   = to   === 'no' ? 'nb' : to;
+          const url   = `https://lingva.thedaviddelta.com/api/v1/${lFrom}/${lTo}/${encodeURIComponent(text)}`;
+          const r     = await _fetchWithTimeout(url, 8000);
+          const d     = await r.json();
+          if (d.translation) {
+            const decoded = decodeHtmlEntities(d.translation);
+            _transCache[key] = decoded;
+            return { text: decoded, api: 'Lingva' };
+          }
+        } catch (e) {
+          console.warn('[translate] Lingva failed:', e.message);
+        }
+
+        throw new Error('Translation unavailable. Try again in a moment.');
       }
 
       async function freeTranslate(text, from, to) {
