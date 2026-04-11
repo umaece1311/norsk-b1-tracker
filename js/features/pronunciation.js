@@ -181,7 +181,11 @@
         document
           .getElementById('recBtn-' + id)
           .classList.add('hidden', 'recording-active');
-        document.getElementById('stopBtn-' + id).classList.remove('hidden');
+        const _stopBtn = document.getElementById('stopBtn-' + id);
+        _stopBtn.classList.remove('hidden');
+        _stopBtn.disabled = true;
+        _stopBtn.textContent = '⏹ Stop (2s…)';
+        setTimeout(() => { _stopBtn.disabled = false; _stopBtn.textContent = '⏹ Stop & Analyse'; }, 2000);
         document.getElementById('recStatus-' + id).textContent =
           '🔴 Recording… speak your answer in Norwegian. Press Stop when done.';
         document.getElementById('recResult-' + id).innerHTML = '';

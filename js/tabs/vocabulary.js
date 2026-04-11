@@ -607,7 +607,12 @@
         const recBtn  = document.getElementById('vp-rec-btn');
         const stopBtn = document.getElementById('vp-stop-btn');
         if (recBtn) recBtn.classList.add('hidden');
-        if (stopBtn) stopBtn.classList.remove('hidden');
+        if (stopBtn) {
+          stopBtn.classList.remove('hidden');
+          stopBtn.disabled = true;
+          stopBtn.textContent = '⏹ Stop (2s…)';
+          setTimeout(() => { stopBtn.disabled = false; stopBtn.textContent = '⏹ Stop & Score'; }, 2000);
+        }
         document.getElementById('vp-status').textContent = '🔴 Recording… say the word. Press Stop when done.';
         document.getElementById('vp-result').innerHTML = '';
         const nx = document.getElementById('vp-next');

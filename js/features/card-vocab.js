@@ -135,8 +135,16 @@
         };
         mr.start();
 
-        // Update UI
-        _setCvButtons(qId, safeId, true);
+        // Update UI — disable Stop for 2s to prevent premature click
+        const _recBtn  = document.getElementById('cv-rec-'  + qId + '-' + safeId);
+        const _stopBtn = document.getElementById('cv-stop-' + qId + '-' + safeId);
+        if (_recBtn)  _recBtn.classList.add('hidden');
+        if (_stopBtn) {
+          _stopBtn.classList.remove('hidden');
+          _stopBtn.disabled = true;
+          _stopBtn.textContent = '⏹ Stop (2s…)';
+          setTimeout(() => { _stopBtn.disabled = false; _stopBtn.textContent = '⏹ Stop'; }, 2000);
+        }
         const hint = document.getElementById('cv-hint-' + qId + '-' + safeId);
         if (hint) hint.innerHTML = `🔴 Recording… say <strong>${word}</strong>`;
         const result = document.getElementById('cv-result-' + qId + '-' + safeId);
