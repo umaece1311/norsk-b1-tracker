@@ -599,27 +599,31 @@
             _vpState.transcript += final;
             const el = document.getElementById('vp-interim');
             if (el) el.textContent = (_vpState.transcript + interim).trim() || '…listening';
+            // Auto-stop as soon as a final word is recognised
+            if (final.trim()) {
+              clearTimeout(_vpState.autoStop);
+              setTimeout(() => vpStopRecording(), 300);
+            }
           };
           rec.onerror = () => {};
           try { rec.start(); } catch(e) {}
         }
 
+        // Auto-stop fallback after 5s if no speech detected
+        _vpState.autoStop = setTimeout(() => vpStopRecording(), 5000);
+
         const recBtn  = document.getElementById('vp-rec-btn');
         const stopBtn = document.getElementById('vp-stop-btn');
         if (recBtn) recBtn.classList.add('hidden');
-        if (stopBtn) {
-          stopBtn.classList.remove('hidden');
-          stopBtn.disabled = true;
-          stopBtn.textContent = '⏹ Stop (2s…)';
-          setTimeout(() => { stopBtn.disabled = false; stopBtn.textContent = '⏹ Stop & Score'; }, 2000);
-        }
-        document.getElementById('vp-status').textContent = '🔴 Recording… say the word. Press Stop when done.';
+        if (stopBtn) stopBtn.classList.add('hidden'); // hidden — auto-stops after word
+        document.getElementById('vp-status').textContent = '🔴 Say the word — stops automatically';
         document.getElementById('vp-result').innerHTML = '';
         const nx = document.getElementById('vp-next');
         if (nx) nx.classList.add('hidden');
       }
 
       function vpStopRecording() {
+        clearTimeout(_vpState?.autoStop);
         if (_vpState?.rec) { try { _vpState.rec.stop(); } catch(e){} }
         if (_vpState?.mediaRec && _vpState.mediaRec.state !== 'inactive') {
           _vpState.mediaRec.stop();

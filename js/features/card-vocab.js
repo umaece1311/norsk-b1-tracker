@@ -112,8 +112,14 @@
             _cvState[key].transcript += final;
             const hint = document.getElementById('cv-hint-' + qId + '-' + safeId);
             if (hint) hint.innerHTML = (_cvState[key].transcript + interim).trim() || '…listening';
+            // Auto-stop as soon as a final result arrives (single word)
+            if (final.trim()) {
+              clearTimeout(_cvState[key].autoStop);
+              setTimeout(() => stopCardWordRecording(qId, word), 300);
+            }
           };
           rec.onend = () => {
+            clearTimeout(_cvState[key]?.autoStop);
             if (_cvState[key]?.mediaRec?.state !== 'inactive') {
               try { _cvState[key].mediaRec.stop(); } catch(e) {}
             }
@@ -122,6 +128,9 @@
           rec.onerror = () => {};
           try { rec.start(); } catch (e) {}
         }
+
+        // Auto-stop fallback after 5s if no speech detected
+        _cvState[key].autoStop = setTimeout(() => stopCardWordRecording(qId, word), 5000);
 
         // ── MediaRecorder ─────────────────────────────────────────────────────────
         const mr = new MediaRecorder(stream, {
@@ -135,18 +144,13 @@
         };
         mr.start();
 
-        // Update UI — disable Stop for 2s to prevent premature click
+        // Update UI — no manual Stop needed, auto-stops after word detected
         const _recBtn  = document.getElementById('cv-rec-'  + qId + '-' + safeId);
         const _stopBtn = document.getElementById('cv-stop-' + qId + '-' + safeId);
         if (_recBtn)  _recBtn.classList.add('hidden');
-        if (_stopBtn) {
-          _stopBtn.classList.remove('hidden');
-          _stopBtn.disabled = true;
-          _stopBtn.textContent = '⏹ Stop (2s…)';
-          setTimeout(() => { _stopBtn.disabled = false; _stopBtn.textContent = '⏹ Stop'; }, 2000);
-        }
+        if (_stopBtn) _stopBtn.classList.add('hidden'); // hidden — auto-stop handles it
         const hint = document.getElementById('cv-hint-' + qId + '-' + safeId);
-        if (hint) hint.innerHTML = `🔴 Recording… say <strong>${word}</strong>`;
+        if (hint) hint.innerHTML = `🔴 Say <strong>${word}</strong> — stops automatically`;
         const result = document.getElementById('cv-result-' + qId + '-' + safeId);
         if (result) result.innerHTML = '';
       }
@@ -156,6 +160,7 @@
         const key    = qId + '_' + safeId;
         const p      = _cvState[key];
         if (!p) return;
+        clearTimeout(p.autoStop);
         if (p.rec) { try { p.rec.stop(); } catch (e) {} }
         if (p.mediaRec && p.mediaRec.state !== 'inactive') {
           try { p.mediaRec.stop(); } catch (e) {}
