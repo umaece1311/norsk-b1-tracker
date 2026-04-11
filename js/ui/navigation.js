@@ -1,5 +1,7 @@
       // ─── NAVIGATION ───────────────────────────────────────────────────────────────
       function showTab(tab) {
+        // Stop any TTS playing when leaving a tab
+        window.speechSynthesis.cancel();
         [
           'today',
           'questions',

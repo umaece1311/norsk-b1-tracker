@@ -37,9 +37,9 @@
         const modeBar = `
           <div class="study-mode-bar">
             <button class="study-mode-btn${_studyMode==='qa'?' active':''}"
-              onclick="_studyMode='qa';renderStudy()">📖 Q&amp;A Practice</button>
+              onclick="window.speechSynthesis.cancel();_studyMode='qa';renderStudy()">📖 Q&amp;A Practice</button>
             <button class="study-mode-btn${_studyMode==='bank'?' active':''}"
-              onclick="_studyMode='bank';_sbIdx=0;renderStudy()">📜 Sentence Bank (${(typeof SENTENCES_B1!=='undefined'?SENTENCES_B1.length:0)})</button>
+              onclick="window.speechSynthesis.cancel();_studyMode='bank';_sbIdx=0;renderStudy()">📜 Sentence Bank (${(typeof SENTENCES_B1!=='undefined'?SENTENCES_B1.length:0)})</button>
           </div>`;
 
         if (_studyMode === 'bank') {
@@ -399,8 +399,6 @@
         panel.classList.remove('hidden');
         _renderSentPanel(qId);
 
-        // Auto-play first sentence after a short delay
-        setTimeout(() => sentSpeak(qId), 500);
       }
 
       function _renderSentPanel(qId) {
@@ -416,6 +414,7 @@
 
         panel.innerHTML = `
           <div class="sent-prac-box">
+            <!-- Progress bar -->
             <div class="sent-prac-header">
               <span class="sent-prac-progress">Sentence ${idx + 1} of ${sentences.length}</span>
               <div class="sent-prac-prog-bar">
@@ -423,19 +422,25 @@
               </div>
             </div>
 
-            <div class="sent-prac-sentence">${sent}</div>
+            <!-- Sentence (like q-text) -->
+            <div class="q-text" style="margin-bottom:12px">${sent}</div>
 
-            <div class="sent-prac-controls">
-              <button class="btn btn-ghost"   onclick="sentSpeak(${qId})">🔊 Hear Again</button>
-              <button class="btn btn-green"   id="sent-rec-${qId}"  onclick="sentRecord(${qId})">🎤 Record</button>
+            <!-- Spoken area (like textarea) -->
+            <div class="sb-spoken-area" id="sent-spoken-${qId}">
+              <span class="sb-spoken-placeholder">Press 🎤 Record — say this sentence in Norwegian…</span>
+            </div>
+
+            <!-- Action row (matches card) -->
+            <div class="action-row">
+              <button class="btn btn-ghost"  onclick="sentSpeak(${qId})">🔊 Hear</button>
+              <button class="btn btn-green"  id="sent-rec-${qId}"  onclick="sentRecord(${qId})">🎤 Record</button>
               <button class="btn btn-danger hidden" id="sent-stop-${qId}" onclick="sentStop(${qId})">⏹ Stop</button>
             </div>
 
-            <div class="sent-prac-status" id="sent-status-${qId}">🔊 Listen, then record yourself saying the sentence</div>
-            <div class="st-interim"        id="sent-interim-${qId}"></div>
+            <div class="st-prac-status" id="sent-status-${qId}"></div>
             <div id="sent-result-${qId}"></div>
 
-            <div class="sent-prac-nav" id="sent-nav-${qId}" style="display:none">
+            <div class="sent-prac-nav hidden" id="sent-nav-${qId}">
               <button class="btn btn-gray"   onclick="sentPrev(${qId})" ${idx === 0 ? 'disabled' : ''}>‹ Prev</button>
               <button class="btn btn-indigo" onclick="sentNext(${qId})">${isLast ? '🎉 Finish' : 'Next →'}</button>
             </div>
@@ -501,8 +506,8 @@
               if (e.results[i].isFinal) final += t + ' '; else interim += t;
             }
             p.transcript += final;
-            const el = document.getElementById('sent-interim-' + qId);
-            if (el) el.textContent = (p.transcript + interim).trim() || '…listening';
+            const spokenEl = document.getElementById('sent-spoken-' + qId);
+            if (spokenEl) spokenEl.textContent = (p.transcript + interim).trim() || '…listening';
 
             // Auto-stop 300ms after first final result (sentences are short)
             if (final.trim()) {
@@ -534,20 +539,20 @@
           stopBtn.textContent = '⏹ Stop (2s…)';
           setTimeout(() => { stopBtn.disabled = false; stopBtn.textContent = '⏹ Stop & Score'; }, 2000);
         }
-        const s = document.getElementById('sent-status-' + qId);
-        if (s) s.textContent = '🔴 Recording… say the sentence in Norwegian';
+        const spokenArea = document.getElementById('sent-spoken-' + qId);
+        if (spokenArea) { spokenArea.textContent = ''; spokenArea.classList.add('recording'); }
         const r = document.getElementById('sent-result-' + qId);
         if (r) r.innerHTML = '';
       }
 
       function sentStop(qId) {
         _sentStopCleanup(qId);
-        const s = document.getElementById('sent-status-' + qId);
-        if (s) s.textContent = '⏳ Processing…';
         const recBtn  = document.getElementById('sent-rec-'  + qId);
         const stopBtn = document.getElementById('sent-stop-' + qId);
         if (recBtn)  recBtn.classList.remove('hidden');
         if (stopBtn) stopBtn.classList.add('hidden');
+        const spokenArea = document.getElementById('sent-spoken-' + qId);
+        if (spokenArea) spokenArea.classList.remove('recording');
       }
 
       function _sentStopCleanup(qId) {
@@ -587,23 +592,21 @@
         const resultEl = document.getElementById('sent-result-' + qId);
         if (resultEl) {
           resultEl.innerHTML = `
-            <div class="st-score-row">
-              <div class="st-score-num" style="color:${color}">${score}%</div>
-              <div class="st-score-bar-wrap">
-                <div class="st-score-bar"><div class="st-score-fill" style="width:${score}%;background:${color}"></div></div>
-                <div style="font-size:0.78rem;font-weight:600;color:${color}">${msg}</div>
+            <div class="sb-score-block">
+              <div class="st-score-row">
+                <div class="st-score-num" style="color:${color}">${score}%</div>
+                <div class="st-score-bar-wrap">
+                  <div class="st-score-bar"><div class="st-score-fill" style="width:${score}%;background:${color}"></div></div>
+                  <div style="font-size:0.78rem;font-weight:600;color:${color}">${msg}</div>
+                </div>
               </div>
-            </div>
-            ${sp     ? `<div class="st-you-said">You said: <em>"${sp}"</em></div>` : ''}
-            ${missed.length ? `<div class="st-missed">Missed: <strong>${missed.join(', ')}</strong></div>` : ''}`;
+              ${missed.length ? `<div class="st-missed">Missed: <strong>${missed.join(', ')}</strong></div>` : ''}
+            </div>`;
         }
 
-        const s = document.getElementById('sent-status-' + qId);
-        if (s) s.textContent = score >= 80 ? '✅ Perfect! Move to next sentence.' : '🔁 Try again or move on';
-
-        // Show Prev / Next nav
+        // Show nav in action-row style
         const nav = document.getElementById('sent-nav-' + qId);
-        if (nav) nav.style.display = 'flex';
+        if (nav) nav.classList.remove('hidden');
       }
 
       function sentNext(qId) {
@@ -625,7 +628,7 @@
         }
         p.idx++;
         _renderSentPanel(qId);
-        setTimeout(() => sentSpeak(qId), 400);
+        // no auto-play — user clicks 🔊 Hear manually
       }
 
       function sentPrev(qId) {
@@ -633,7 +636,7 @@
         if (!p || p.idx <= 0) return;
         p.idx--;
         _renderSentPanel(qId);
-        setTimeout(() => sentSpeak(qId), 400);
+        // no auto-play — user clicks 🔊 Hear manually
       }
 
       // ══════════════════════════════════════════════════════════════════════════════
@@ -657,13 +660,8 @@
         renderSentenceBank();
       }
 
-      function sbPrev() { if (_sbIdx > 0)                    { _sbIdx--; renderSentenceBank(); _sbAutoPlayQ(); } }
-      function sbNext() { if (_sbIdx < _sbQueue().length - 1) { _sbIdx++; renderSentenceBank(); _sbAutoPlayQ(); } }
-
-      function _sbAutoPlayQ() {
-        const q = _sbQueue()[_sbIdx];
-        if (q) setTimeout(() => sbSpeakQuestion(q.id), 400);
-      }
+      function sbPrev() { if (_sbIdx > 0)                    { _sbIdx--; renderSentenceBank(); } }
+      function sbNext() { if (_sbIdx < _sbQueue().length - 1) { _sbIdx++; renderSentenceBank(); } }
 
       function renderSentenceBank() {
         const root = document.getElementById('sb-root');
@@ -697,27 +695,44 @@
 
           <div class="sb-cat-row">${catBtns}</div>
 
-          <div class="sb-card">
-            <!-- Question (always visible) -->
-            <div class="sb-qa-block">
-              <div class="sb-qa-label">❓ Question</div>
-              <div class="sb-question">${sent.q}</div>
-              <div class="sb-qen">${sent.qEn}</div>
-            </div>
-
-            <!-- Record your answer -->
-            <div class="sb-record-block">
-              <div class="sb-qa-label" style="margin-bottom:8px">🎤 Your Answer</div>
-              <div class="sb-actions">
-                <button class="btn btn-ghost"    onclick="sbSpeakQuestion(${sent.id})">🔊 Hear Question</button>
-                <button class="btn btn-green"    id="sb-rec-${sent.id}"  onclick="sbRecord(${sent.id})">🎤 Record Answer</button>
-                <button class="btn btn-danger hidden" id="sb-stop-${sent.id}" onclick="sbStop(${sent.id})">⏹ Stop</button>
+          <div class="card">
+            <!-- Header: badge + question -->
+            <div class="card-header">
+              <div style="flex:1">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap">
+                  <span class="cat-badge ${catClass(sent.cat)}">${catLabel(sent.cat)}</span>
+                  <span class="q-num">#${_sbIdx+1}</span>
+                  <span class="sb-qen-badge">${sent.qEn}</span>
+                </div>
+                <div class="q-text">${sent.q}</div>
               </div>
-              <div class="sent-prac-status" id="sb-status-${sent.id}">Press 🎤 and speak your answer in Norwegian</div>
-              <div class="st-interim"        id="sb-interim-${sent.id}"></div>
             </div>
 
-            <!-- Result + sample answer (hidden until after recording) -->
+            <!-- Spoken answer area (mirrors textarea) -->
+            <div class="sb-spoken-area" id="sb-spoken-${sent.id}">
+              <span class="sb-spoken-placeholder">Press 🎤 Record Answer — speak in Norwegian…</span>
+            </div>
+
+            <!-- Sample answer (collapsible, always available) -->
+            <div class="pdf-answer-box">
+              <div class="pdf-answer-toggle" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                <span>📖</span> <span>Sample Answer</span> <span style="margin-left:auto;font-size:1rem">▼</span>
+              </div>
+              <div class="pdf-answer-content hidden">
+                <div style="margin-bottom:6px">${sent.no}</div>
+                <div style="font-size:0.82rem;color:#2563eb;font-style:italic">${sent.en}</div>
+                <button class="btn btn-ghost" style="font-size:0.76rem;margin-top:8px" onclick="sbSpeak(${sent.id})">🔊 Hear Sample Answer</button>
+              </div>
+            </div>
+
+            <!-- Action row -->
+            <div class="action-row">
+              <button class="btn btn-ghost"  onclick="sbSpeakQuestion(${sent.id})">🔊 Question</button>
+              <button class="btn btn-green"  id="sb-rec-${sent.id}"  onclick="sbRecord(${sent.id})">🎤 Record Answer</button>
+              <button class="btn btn-danger hidden" id="sb-stop-${sent.id}" onclick="sbStop(${sent.id})">⏹ Stop</button>
+            </div>
+
+            <div class="st-prac-status" id="sb-status-${sent.id}"></div>
             <div id="sb-result-${sent.id}"></div>
           </div>`;
       }
@@ -785,8 +800,9 @@
               if (e.results[i].isFinal) final += t + ' '; else interim += t;
             }
             _sbRec[id].transcript += final;
-            const el = document.getElementById('sb-interim-' + id);
-            if (el) el.textContent = (_sbRec[id].transcript + interim).trim() || '…listening';
+            // Show live text in the spoken area (like a textarea)
+            const spoken = document.getElementById('sb-spoken-' + id);
+            if (spoken) spoken.textContent = (_sbRec[id].transcript + interim).trim() || '…listening';
 
             if (final.trim()) {
               clearTimeout(_sbRec[id].autoStop);
@@ -815,8 +831,11 @@
           stopBtn.textContent = '⏹ Stop (2s…)';
           setTimeout(() => { stopBtn.disabled = false; stopBtn.textContent = '⏹ Stop & Score'; }, 2000);
         }
+        // Show recording state in spoken area
+        const spoken = document.getElementById('sb-spoken-' + id);
+        if (spoken) { spoken.textContent = ''; spoken.classList.add('recording'); }
         const st = document.getElementById('sb-status-' + id);
-        if (st) st.textContent = '🔴 Recording… answer in Norwegian, speak freely';
+        if (st) st.textContent = '🔴 Recording…';
         const r = document.getElementById('sb-result-' + id);
         if (r) r.innerHTML = '';
       }
@@ -837,6 +856,8 @@
         const stopBtn = document.getElementById('sb-stop-' + id);
         if (recBtn)  recBtn.classList.remove('hidden');
         if (stopBtn) stopBtn.classList.add('hidden');
+        const spoken = document.getElementById('sb-spoken-' + id);
+        if (spoken) spoken.classList.remove('recording');
       }
 
       function sbShowResult(id, spoken) {
@@ -863,8 +884,7 @@
         const resultEl = document.getElementById('sb-result-' + id);
         if (resultEl) {
           resultEl.innerHTML = `
-            <div class="sb-result-block">
-              <!-- Score -->
+            <div class="sb-score-block">
               <div class="st-score-row">
                 <div class="st-score-num" style="color:${color}">${score}%</div>
                 <div class="st-score-bar-wrap">
@@ -872,24 +892,12 @@
                   <div style="font-size:0.78rem;font-weight:600;color:${color}">${msg}</div>
                 </div>
               </div>
-              ${sp ? `<div class="st-you-said">You said: <em>"${sp}"</em></div>` : ''}
-              ${missed.length ? `<div class="st-missed">Missed words: <strong>${missed.join(', ')}</strong></div>` : ''}
-
-              <!-- Sample answer revealed -->
-              <div class="sb-sample-reveal">
-                <div class="sb-sample-label">📖 Sample Answer</div>
-                <div class="sb-sample-no">${s.no}</div>
-                <div class="sb-sample-en">${s.en}</div>
-                <div style="margin-top:8px">
-                  <button class="btn btn-ghost" style="font-size:0.78rem" onclick="sbSpeak(${id})">🔊 Hear Sample Answer</button>
-                </div>
-              </div>
-
-              <!-- Navigation -->
-              <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-                <button class="btn btn-green"  onclick="sbRecord(${id})">🔁 Try Again</button>
-                <button class="btn btn-indigo" onclick="sbNext()">Next Question →</button>
-              </div>
+              ${missed.length ? `<div class="st-missed">Missed: <strong>${missed.join(', ')}</strong></div>` : ''}
+            </div>
+            <div class="action-row" style="margin-top:10px">
+              <button class="btn btn-ghost"  onclick="sbSpeak(${id})">🔊 Sample Answer</button>
+              <button class="btn btn-green"  onclick="sbRecord(${id})">🔁 Try Again</button>
+              <button class="btn btn-indigo" onclick="sbNext()">Next →</button>
             </div>`;
         }
 
