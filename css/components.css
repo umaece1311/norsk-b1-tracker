@@ -332,11 +332,57 @@
         border-radius: 8px;
         border-left: 3px solid #4ade80;
       }
+      .sb-record-block {
+        background: #f8faff;
+        border: 1.5px solid #e0e7ff;
+        border-radius: 10px;
+        padding: 14px;
+        margin-bottom: 12px;
+      }
       .sb-actions {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
         margin-bottom: 10px;
+      }
+      .sb-result-block {
+        background: #fff;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 14px;
+        margin-top: 4px;
+      }
+      .sb-sample-reveal {
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1.5px dashed #c7d2fe;
+      }
+      .sb-sample-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #6366f1;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 8px;
+      }
+      .sb-sample-no {
+        font-family: 'Fraunces', serif;
+        font-size: 1.05rem;
+        color: #1e293b;
+        line-height: 1.6;
+        padding: 10px 14px;
+        background: #fafaff;
+        border-left: 4px solid #6366f1;
+        border-radius: 8px;
+        margin-bottom: 6px;
+      }
+      .sb-sample-en {
+        font-size: 0.86rem;
+        color: #374151;
+        padding: 8px 12px;
+        background: #f0fdf4;
+        border-radius: 7px;
+        border-left: 3px solid #4ade80;
       }
 
       /* ── Cards ── */
