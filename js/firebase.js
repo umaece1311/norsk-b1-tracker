@@ -74,13 +74,13 @@
     _gateError('');
 
     if (state === 'off') {
-      gate.classList.add('hidden');
-      app.style.display = '';
+      if (gate) gate.classList.add('hidden');
+      if (app)  app.style.display = '';
       return;
     }
 
-    gate.classList.remove('hidden');
-    app.style.display = 'none';
+    if (gate) gate.classList.remove('hidden');
+    if (app)  app.style.display = 'none';
 
     const target = $('gate' + state.charAt(0).toUpperCase() + state.slice(1));
     if (target) target.classList.remove('hidden');
@@ -89,8 +89,10 @@
     if (user && ['request','pending','denied'].includes(state)) {
       const chip = $('gateUserChip');
       if (chip) {
-        chip.querySelector('.auth-gate-user-name').textContent  = user.displayName || 'Unknown';
-        chip.querySelector('.auth-gate-user-email').textContent = user.email;
+        const nameEl  = chip.querySelector('.auth-gate-user-name');
+        const emailEl = chip.querySelector('.auth-gate-user-email');
+        if (nameEl)  nameEl.textContent  = user.displayName || 'Unknown';
+        if (emailEl) emailEl.textContent = user.email;
         const img = chip.querySelector('img');
         if (user.photoURL) {
           img.src = user.photoURL;

@@ -478,6 +478,98 @@
         color: #888;
       }
 
+      /* ── Weekly Goal Tracker ── */
+      .wgt-wrapper {
+        background: #fff;
+        border-radius: 14px;
+        padding: 18px 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      }
+      .wgt-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #1a2235;
+        margin-bottom: 6px;
+      }
+      .wgt-legend {
+        font-size: 0.76rem;
+        color: #64748b;
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .wgt-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+      }
+      @media (max-width: 640px) {
+        .wgt-grid { grid-template-columns: repeat(4, 1fr); }
+      }
+      @media (max-width: 420px) {
+        .wgt-grid { grid-template-columns: repeat(2, 1fr); }
+      }
+      .wgt-day {
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 10px 8px;
+        font-size: 0.78rem;
+        background: #fff;
+      }
+      .wgt-day-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+        min-height: 18px;
+      }
+      .wgt-date {
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: #64748b;
+      }
+      .wgt-today-badge {
+        font-size: 0.58rem;
+        background: #2563eb;
+        color: #fff;
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+      }
+      .wgt-icon {
+        font-size: 1.3rem;
+        margin-bottom: 4px;
+      }
+      .wgt-status {
+        font-weight: 700;
+        color: #1a2235;
+        font-size: 0.78rem;
+        margin-bottom: 2px;
+      }
+      .wgt-goal {
+        font-size: 0.68rem;
+        color: #94a3b8;
+      }
+      .wgt-q {
+        font-size: 0.65rem;
+        color: #6b7280;
+        margin-top: 5px;
+        line-height: 1.35;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .wgt-done     { background: #f0fdf4; border-color: #86efac; }
+      .wgt-missed   { background: #fff1f2; border-color: #fca5a5; }
+      .wgt-rest     { background: #fefce8; border-color: #fde68a; }
+      .wgt-revision { background: #f0fdf4; border-color: #d1fae5; }
+      .wgt-upcoming { background: #f8fafc; border-color: #e2e8f0; }
+      .wgt-today    { border: 2px solid #2563eb !important; }
+
       /* ── Audio Device Selector (Bluetooth headset) ── */
       .audio-device-panel {
         background: #f5f3ff;

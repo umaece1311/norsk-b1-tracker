@@ -40,6 +40,93 @@
         renderToday();
       }
 
+      // ─── WEEKLY GOAL TRACKER BANNER ───────────────────────────────────────────────
+      function renderWeekTracker() {
+        const container = document.getElementById('weekGoalTracker');
+        if (!container) return;
+
+        const today    = new Date();
+        const todayStr = today.toISOString().slice(0, 10);
+
+        // Monday of current week
+        const dow0    = today.getDay();
+        const monday  = new Date(today);
+        monday.setDate(today.getDate() - ((dow0 + 6) % 7));
+
+        // Build Mon→Sun
+        const days = Array.from({ length: 7 }, (_, i) => {
+          const d = new Date(monday);
+          d.setDate(monday.getDate() + i);
+          return d;
+        });
+
+        // Map: YYYY-MM-DD → questions answered that day
+        const dateToQs = {};
+        Object.entries(state.timestamps || {}).forEach(([idStr, ts]) => {
+          if (!ts) return;
+          const dateStr = ts.slice(0, 10);
+          const id = Number(idStr);
+          const q  = allQuestions().find(q => q.id === id);
+          if (q && state.answers[id]?.trim()) {
+            if (!dateToQs[dateStr]) dateToQs[dateStr] = [];
+            dateToQs[dateStr].push(q);
+          }
+        });
+
+        const DAY  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        const MON  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+        const cells = days.map(d => {
+          const dStr      = d.toISOString().slice(0, 10);
+          const isToday   = dStr === todayStr;
+          const isPast    = d < today && !isToday;
+          const dow       = d.getDay();
+          const answeredQs = dateToQs[dStr] || [];
+          const done      = answeredQs.length > 0;
+          const dLabel    = `${DAY[dow]} ${d.getDate()} ${MON[d.getMonth()]}`;
+
+          let icon, statusLabel, goalLabel, cardCls;
+
+          if (dow === 1) {                          // Monday — rest
+            icon = '🥳'; statusLabel = 'Rest day'; goalLabel = 'Rest';
+            cardCls = isToday ? 'wgt-today' : 'wgt-rest';
+          } else if (dow === 0 || dow === 6) {      // Sat / Sun — revision
+            if (isToday)      { icon = '🔄'; statusLabel = 'Revision day'; goalLabel = 'Revision'; cardCls = 'wgt-today'; }
+            else if (isPast)  { icon = '📅'; statusLabel = 'Revision day'; goalLabel = 'Revision'; cardCls = 'wgt-revision'; }
+            else              { icon = '⏳'; statusLabel = 'Upcoming';      goalLabel = 'Revision'; cardCls = 'wgt-upcoming'; }
+          } else {                                  // Tue–Fri — active
+            if (done)         { icon = '✅'; statusLabel = 'Done!';    goalLabel = 'Goal: 1 Q'; cardCls = isToday ? 'wgt-today wgt-done' : 'wgt-done'; }
+            else if (isPast)  { icon = '❌'; statusLabel = 'Missed';   goalLabel = 'Goal: 1 Q'; cardCls = 'wgt-missed'; }
+            else if (isToday) { icon = '📝'; statusLabel = 'Practice'; goalLabel = 'Goal: 1 Q'; cardCls = 'wgt-today'; }
+            else              { icon = '⏳'; statusLabel = 'Upcoming'; goalLabel = 'Goal: 1 Q'; cardCls = 'wgt-upcoming'; }
+          }
+
+          const qText = done && answeredQs[0] ? answeredQs[0].q : '';
+          return `
+            <div class="wgt-day ${cardCls}">
+              <div class="wgt-day-header">
+                <div class="wgt-date">${dLabel}</div>
+                ${isToday ? '<div class="wgt-today-badge">TODAY</div>' : ''}
+              </div>
+              <div class="wgt-icon">${icon}</div>
+              <div class="wgt-status">${statusLabel}</div>
+              <div class="wgt-goal">${goalLabel}</div>
+              ${qText ? `<div class="wgt-q">${qText}</div>` : ''}
+            </div>`;
+        }).join('');
+
+        container.innerHTML = `
+          <div class="wgt-wrapper">
+            <div class="wgt-title">&#128197; This Week's Goal Tracker</div>
+            <div class="wgt-legend">
+              <span>&#128221; Weekdays (Tue&ndash;Fri): Learn 1 question/day</span>
+              <span>&#128197; Weekend (Sat&ndash;Sun): Revision</span>
+              <span>&#129395; Monday: Rest</span>
+            </div>
+            <div class="wgt-grid">${cells}</div>
+          </div>`;
+      }
+
       function renderToday() {
         const now = new Date();
         document.getElementById('todayDate').textContent =
@@ -56,6 +143,8 @@
         const done = qs.filter(q => state.answers[q.id]?.trim()).length;
         const pct = Math.round((done / total) * 100);
         const remaining = total - done;
+
+        renderWeekTracker();
 
         document.getElementById('todayStats').innerHTML = `
     <div class="stat-card"><div class="stat-num">${done}</div><div class="stat-label">Answered ✅</div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div></div>
