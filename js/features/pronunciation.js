@@ -95,7 +95,25 @@
         }
 
         // Init per-question state
-        _pron[id] = { audioChunks: [], transcript: '', interimTranscript: '' };
+        _pron[id] = { audioChunks: [], transcript: '', interimTranscript: '', hasSR };
+
+        // ── Helper: show result only after BOTH audio + recognition are done ──
+        // This prevents scoring before the last few words are flushed.
+        function _tryShowResult() {
+          const p = _pron[id];
+          if (!p || p._resultShown) return;
+          if (!p._audioReady) return;           // wait for mediaRec.onstop
+          if (hasSR && !p._recEnded) return;    // wait for recognition.onend
+          p._resultShown = true;
+          clearTimeout(p._resultTimeout);
+          if (p.transcript) {
+            showPronunciationResult(id, p.transcript);
+          } else {
+            document.getElementById('recStatus-' + id).textContent = hasSR
+              ? '⚠️ No speech detected. Try speaking clearly and closer to the mic.'
+              : '🎧 Recording saved! (Speech recognition unavailable — use playback to review)';
+          }
+        }
 
         // ── 1. MediaRecorder — captures raw audio ──────────────────────────
         const mr = new MediaRecorder(stream, {
@@ -124,14 +142,8 @@
           document.getElementById('replayBtn-' + id).style.display = '';
           document.getElementById('clearRecBtn-' + id).style.display = '';
           stopWaveform(id);
-          // Show pronunciation result using collected transcript
-          if (_pron[id].transcript) {
-            showPronunciationResult(id, _pron[id].transcript);
-          } else {
-            document.getElementById('recStatus-' + id).textContent = hasSR
-              ? '⚠️ No speech detected. Try speaking clearly and closer to the mic.'
-              : '🎧 Recording saved! (Speech recognition unavailable — use playback to review)';
-          }
+          _pron[id]._audioReady = true;
+          _tryShowResult();
         };
         mr.start(100); // collect data every 100ms
 
@@ -163,6 +175,11 @@
             if (interimEl)
               interimEl.textContent =
                 (_pron[id].transcript + interim).trim() || '…listening';
+          };
+          // onend fires after recognition has fully flushed all final results
+          rec.onend = () => {
+            _pron[id]._recEnded = true;
+            _tryShowResult();
           };
           rec.onerror = e => {
             if (e.error !== 'no-speech') {
@@ -196,22 +213,37 @@
       function stopRecording(id) {
         const p = _pron[id];
         if (!p) return;
-        // Stop speech recognition first so final results flush
-        if (p.recognition) {
-          try {
-            p.recognition.stop();
-          } catch (e) {}
-        }
-        // Stop media recorder (triggers onstop → show player + result)
+
+        // Safety fallback: force-show result after 4s in case onend never fires
+        p._resultTimeout = setTimeout(() => {
+          if (p._resultShown) return;
+          p._recEnded  = true;
+          p._audioReady = p._audioReady || true;
+          p._resultShown = true;
+          if (p.transcript) {
+            showPronunciationResult(id, p.transcript);
+          } else {
+            const el = document.getElementById('recStatus-' + id);
+            if (el) el.textContent = '⚠️ No speech detected. Try speaking closer to the mic.';
+          }
+        }, 4000);
+
+        // Stop media recorder first (audio blob + playback setup)
         if (p.mediaRec && p.mediaRec.state !== 'inactive') {
           p.mediaRec.stop();
         }
+        // Stop recognition after a tiny delay so it can convert any interim
+        // words to final before onend fires
+        setTimeout(() => {
+          if (p.recognition) { try { p.recognition.stop(); } catch (e) {} }
+        }, 300);
+
         document
           .getElementById('recBtn-' + id)
           .classList.remove('hidden', 'recording-active');
         document.getElementById('stopBtn-' + id).classList.add('hidden');
         document.getElementById('recStatus-' + id).textContent =
-          '⏳ Processing…';
+          '⏳ Processing… (capturing last words)';
         document.getElementById('interim-' + id).textContent = '';
       }
 
