@@ -648,6 +648,173 @@
         color: #64748b;
         margin-bottom: 10px;
       }
+      /* ── Vocab audio button ── */
+      .vocab-audio-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        padding: 2px 4px;
+        border-radius: 4px;
+        transition: background 0.1s;
+      }
+      .vocab-audio-btn:hover {
+        background: #e0f2fe;
+      }
+
+      /* ── Conjugation cells (inline editable) ── */
+      .vconj-cell {
+        cursor: pointer;
+        min-width: 72px;
+      }
+      .vconj-cell:hover {
+        background: #f0f9ff;
+      }
+      .vconj-val {
+        font-size: 0.82rem;
+        color: #374151;
+        font-style: italic;
+      }
+      .vconj-empty {
+        font-size: 0.72rem;
+        color: #cbd5e1;
+      }
+      .vconj-input {
+        width: 90px;
+        padding: 3px 6px;
+        border: 1.5px solid #2563eb;
+        border-radius: 4px;
+        font-size: 0.82rem;
+        font-family: 'DM Sans', sans-serif;
+        outline: none;
+      }
+
+      /* ── Vocabulary Pronunciation Practice ── */
+      .vp-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.09);
+        padding: 28px 24px;
+        max-width: 540px;
+        margin: 0 auto;
+      }
+      .vp-progress {
+        text-align: center;
+        font-size: 0.8rem;
+        color: #64748b;
+        margin-bottom: 14px;
+      }
+      .vp-word-display {
+        text-align: center;
+        padding: 24px 16px 20px;
+        background: linear-gradient(135deg, #0f172a, #1e3a8a);
+        border-radius: 14px;
+        margin-bottom: 20px;
+      }
+      .vp-word {
+        font-family: 'Fraunces', serif;
+        font-size: 2.6rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 6px;
+        letter-spacing: 0.02em;
+      }
+      .vp-trans {
+        font-size: 1rem;
+        color: #93c5fd;
+        font-style: italic;
+        margin-bottom: 10px;
+      }
+      .vp-conj-row {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 8px;
+      }
+      .vp-conj-chip {
+        font-size: 0.72rem;
+        background: rgba(255,255,255,0.12);
+        color: #bfdbfe;
+        padding: 3px 10px;
+        border-radius: 20px;
+        border: 1px solid rgba(255,255,255,0.18);
+      }
+      .vp-controls {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 14px;
+      }
+      .vp-status {
+        text-align: center;
+        font-size: 0.84rem;
+        color: #64748b;
+        min-height: 20px;
+        margin-bottom: 6px;
+      }
+      .vp-interim {
+        text-align: center;
+        font-size: 0.88rem;
+        color: #7c3aed;
+        min-height: 20px;
+        margin-bottom: 8px;
+        font-style: italic;
+      }
+      .vp-waveform {
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 12px;
+        background: #1a1a2e;
+      }
+      .vp-waveform canvas {
+        display: block;
+        width: 100%;
+      }
+      .vp-score-box {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: #f8fafc;
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-bottom: 10px;
+      }
+      .vp-score-num {
+        font-family: 'Fraunces', serif;
+        font-size: 2.2rem;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .vp-score-bar-wrap {
+        flex: 1;
+      }
+      .vp-score-bar {
+        height: 8px;
+        background: #e5e7eb;
+        border-radius: 99px;
+        overflow: hidden;
+      }
+      .vp-score-fill {
+        height: 100%;
+        border-radius: 99px;
+        transition: width 0.5s;
+      }
+      .vp-you-said {
+        font-size: 0.82rem;
+        color: #64748b;
+        padding: 6px 10px;
+        background: #f1f5f9;
+        border-radius: 6px;
+        border-left: 3px solid #a78bfa;
+        margin-bottom: 8px;
+      }
+      .vp-next {
+        text-align: center;
+        margin-top: 14px;
+      }
+
       .scan-btn {
         display: inline-flex;
         align-items: center;
