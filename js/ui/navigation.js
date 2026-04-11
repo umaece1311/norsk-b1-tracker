@@ -4,6 +4,7 @@
           'today',
           'questions',
           'examguide',
+          'study',
           'review',
           'progress',
           'vocab',
@@ -20,6 +21,7 @@
         if (tab === 'questions') renderQuestions();
         if (tab === 'review') renderReview();
         if (tab === 'progress') renderProgress();
+        if (tab === 'study') renderStudy();
         if (tab === 'vocab') renderVocab();
         if (tab === 'add') renderAddForm();
         renderSidebar();

@@ -154,6 +154,13 @@
           </button>
           <button
             class="sidebar-nav-btn"
+            data-tab="study"
+            onclick="showTab('study')"
+          >
+            &#127891; Study Mode
+          </button>
+          <button
+            class="sidebar-nav-btn"
             data-tab="review"
             onclick="showTab('review')"
           >
@@ -596,6 +603,18 @@
             </div>
           </div>
 
+          <!-- STUDY MODE TAB -->
+          <div id="tab-study" class="hidden">
+            <div class="today-header">
+              <div>
+                <h2 style="font-size:1.5rem">&#127891; Study Mode</h2>
+                <p style="font-size:0.85rem;color:#64748b;margin-top:2px">Question &amp; Answer with translations, audio and pronunciation practice</p>
+              </div>
+              <button class="btn btn-primary" onclick="studyTranslateAll()">&#127760; Translate Both</button>
+            </div>
+            <div id="study-page-root"></div>
+          </div>
+
           <!-- WEEKLY REVIEW TAB -->
           <div id="tab-review" class="hidden">
             <div
@@ -806,6 +825,7 @@
     <script src="js/tabs/today.js"></script>
     <script src="js/tabs/questions.js"></script>
     <script src="js/tabs/simulation.js"></script>
+    <script src="js/tabs/study.js"></script>
     <script src="js/tabs/review.js"></script>
     <script src="js/tabs/progress.js"></script>
     <script src="js/tabs/add.js"></script>
