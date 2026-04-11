@@ -51,12 +51,14 @@
       <button class="btn btn-ghost" onclick="speakText(${q.id},'q')">🔊 Question</button>
       <button class="btn btn-ghost" onclick="speakText(${q.id},'a')">🔊 Answer</button>
       <button class="btn btn-green" onclick="togglePronunciation(${q.id})">🎤 Pronunciation</button>
+      <button class="btn btn-ghost" onclick="toggleCardVocab(${q.id})">📚 Vocab</button>
       ${opts.showTimer ? `<button class="btn btn-gray" onclick="toggleCardTimer(${q.id},'${q.examType || 'A'}')">⏱ Timer</button>` : ''}
       <button class="btn ${state.reviewMarked[q.id] ? 'btn-review-active' : 'btn-gray'}" id="reviewBtn-${q.id}" onclick="toggleReview(${q.id})">
         🔖 ${state.reviewMarked[q.id] ? 'In Review' : 'Add to Review'}
       </button>
     </div>
 
+    <div id="card-vocab-${q.id}" class="hidden card-vocab-panel"></div>
     <div id="trans-${q.id}" class="hidden trans-panel">
       <div class="trans-tabs">
         <button class="trans-tab active" id="ttab-q-${q.id}"   onclick="switchTransTab(${q.id},'q')">🇳🇴 Question</button>

@@ -230,6 +230,142 @@
         color: #334155;
       }
 
+      /* ── Per-card Vocabulary Panel ── */
+      .card-vocab-panel {
+        background: #fffbeb;
+        border: 1.5px solid #fde68a;
+        border-radius: 12px;
+        margin-top: 10px;
+        overflow: hidden;
+      }
+      .cv-empty {
+        padding: 12px 14px;
+        font-size: 0.84rem;
+        color: #92400e;
+      }
+      .cv-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        background: #fef3c7;
+        border-bottom: 1px solid #fde68a;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .cv-header-title {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #92400e;
+      }
+      .cv-list {
+        padding: 6px 10px 10px;
+      }
+      .cv-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 4px;
+        border-bottom: 1px solid #fef3c7;
+      }
+      .cv-row:last-child {
+        border-bottom: none;
+      }
+      .cv-word-info {
+        flex: 1;
+        min-width: 100px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .cv-word {
+        font-weight: 700;
+        font-size: 0.88rem;
+        color: #1a2235;
+      }
+      .cv-trans {
+        font-size: 0.78rem;
+        color: #2563eb;
+        font-style: italic;
+      }
+      .cv-actions {
+        display: flex;
+        gap: 5px;
+      }
+      .cv-btn {
+        border: none;
+        cursor: pointer;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-family: 'DM Sans', sans-serif;
+        padding: 4px 10px;
+        font-weight: 500;
+        transition: all 0.15s;
+      }
+      .cv-audio-btn {
+        background: #e0f2fe;
+        color: #0369a1;
+      }
+      .cv-audio-btn:hover { background: #bae6fd; }
+      .cv-prac-btn {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .cv-prac-btn:hover { background: #a7f3d0; }
+      .cv-prac-area {
+        width: 100%;
+        margin-top: 4px;
+      }
+      .cv-prac-controls {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-bottom: 5px;
+      }
+      .cv-prac-hint {
+        font-size: 0.76rem;
+        color: #6b7280;
+      }
+      .cv-score-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: #f0fdf4;
+        border-radius: 6px;
+        padding: 6px 10px;
+        margin-bottom: 4px;
+      }
+      .cv-score-num {
+        font-family: 'Fraunces', serif;
+        font-size: 1.3rem;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .cv-score-bar {
+        flex: 1;
+        height: 6px;
+        background: #e5e7eb;
+        border-radius: 99px;
+        overflow: hidden;
+      }
+      .cv-score-fill {
+        height: 100%;
+        border-radius: 99px;
+        transition: width 0.4s;
+      }
+      .cv-score-msg {
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .cv-you-said {
+        font-size: 0.72rem;
+        color: #6b7280;
+        padding: 2px 4px;
+      }
+
       /* ── Translation Panel ── */
       .trans-panel {
         background: #f0fdf4;
