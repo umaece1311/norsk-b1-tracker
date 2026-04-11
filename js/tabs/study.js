@@ -142,7 +142,7 @@
           return;
         }
 
-        _sbRec[id] = { transcript: '', stream };
+        _sbRec[id] = { transcript: '', stream, totalConf: 0, confCount: 0 };
 
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -167,8 +167,15 @@
           rec.onresult = e => {
             let final = '', interim = '';
             for (let i = e.resultIndex; i < e.results.length; i++) {
-              const t = e.results[i][0].transcript;
-              if (e.results[i].isFinal) final += t + ' '; else interim += t;
+              const res = e.results[i];
+              const t   = res[0].transcript;
+              if (res.isFinal) {
+                final += t + ' ';
+                const c = res[0].confidence;
+                if (c > 0) { _sbRec[id].totalConf += c; _sbRec[id].confCount++; }
+              } else {
+                interim += t;
+              }
             }
             _sbRec[id].transcript += final;
             // Show live text in the spoken area (like a textarea)
@@ -231,47 +238,88 @@
         if (spoken) spoken.classList.remove('recording');
       }
 
+      // ── Norwegian grammar heuristic checker ─────────────────────────────────────
+      function _checkNorGrammar(text) {
+        const clean = w => w.replace(/[.,!?;:«»""'']/g, '').toLowerCase().trim();
+        const words = text.split(/\s+/).filter(Boolean).map(clean).filter(Boolean);
+        const tips  = [];
+        let score   = 100;
+
+        if (!words.length) return { score: 0, tips: ['No speech detected'] };
+        if (words.length === 1) return { score: 45, tips: ['Try a full sentence — subject + verb + more'] };
+
+        // Subject: Norwegian pronouns
+        const pronouns = ['jeg', 'du', 'han', 'hun', 'det', 'den', 'vi', 'dere', 'de', 'man'];
+        const hasSubj  = words.some(w => pronouns.includes(w));
+
+        // Verb: common verbs + -er/-te/-de endings (present/past)
+        const fixedV   = ['er','var','har','kan','vil','skal','må','bor','vet','ser','går',
+                          'kom','sier','gjør','får','tar','drar','liker','jobber','heter',
+                          'hører','snakker','spiser','drikker','elsker','trenger','kjenner'];
+        const verbEnds = ['er','te','de','ste','dde'];
+        const hasVerb  = words.some(w =>
+          fixedV.includes(w) || verbEnds.some(e => w.endsWith(e) && w.length > e.length + 1)
+        );
+
+        if (!hasSubj)            { score -= 20; tips.push('Add a subject — jeg, du, vi, han, hun…'); }
+        if (!hasVerb)            { score -= 20; tips.push('Include a verb — er, har, kan, jobber…'); }
+        if (words.length < 3)    { score -= 15; tips.push('Use a fuller sentence for better practice'); }
+        if (tips.length === 0)     tips.push('Good sentence structure!');
+
+        return { score: Math.max(0, score), tips };
+      }
+
       function sbShowResult(id, spoken) {
-        const s = (typeof SENTENCES_B1 !== 'undefined') ? SENTENCES_B1.find(s => s.id === id) : null;
-        if (!s) return;
-        const ref = s.no.toLowerCase();
-        const sp  = spoken.trim().toLowerCase();
+        const sp  = spoken.trim();
+        const rec = _sbRec[id] || {};
 
-        const clean    = w => w.replace(/[.,!?;:«»""'']/g, '').trim();
-        const refWords = ref.split(/\s+/).filter(Boolean).map(clean).filter(Boolean);
-        const spWords  = sp.split(/\s+/).filter(Boolean).map(clean).filter(Boolean);
+        // Pronunciation: SpeechRecognition confidence (0–1 → 0–100)
+        const avgConf  = rec.confCount > 0 ? rec.totalConf / rec.confCount : 0;
+        const pronScore = avgConf > 0 ? Math.round(avgConf * 100) : null;
 
-        const matched = new Set();
-        spWords.forEach(sw => {
-          const idx = refWords.findIndex((rw, ri) => !matched.has(ri) && wordSim(sw, rw) >= 0.75);
-          if (idx >= 0) matched.add(idx);
-        });
-
-        const score  = refWords.length > 0 ? Math.round((matched.size / refWords.length) * 100) : 0;
-        const color  = score >= 80 ? '#16a34a' : score >= 55 ? '#d97706' : '#dc2626';
-        const msg    = score >= 80 ? '🎉 Excellent!' : score >= 55 ? '👍 Good!' : '💪 Keep going!';
-        const missed = refWords.filter((_, i) => !matched.has(i));
+        // Grammar: heuristic Norwegian analysis
+        const gram = _checkNorGrammar(sp);
 
         const resultEl = document.getElementById('sb-result-' + id);
-        if (resultEl) {
-          resultEl.innerHTML = `
-            <div class="sb-score-block">
-              <div class="st-score-row">
-                <div class="st-score-num" style="color:${color}">${score}%</div>
-                <div class="st-score-bar-wrap">
-                  <div class="st-score-bar"><div class="st-score-fill" style="width:${score}%;background:${color}"></div></div>
-                  <div style="font-size:0.78rem;font-weight:600;color:${color}">${msg}</div>
-                </div>
-              </div>
-              ${missed.length ? `<div class="st-missed">Missed: <strong>${missed.join(', ')}</strong></div>` : ''}
-            </div>
-            <div class="action-row" style="margin-top:10px">
-              <button class="btn btn-ghost"  onclick="sbSpeak(${id})">🔊 Sample Answer</button>
-              <button class="btn btn-green"  onclick="sbRecord(${id})">🔁 Try Again</button>
-              <button class="btn btn-indigo" onclick="sbNext()">Next →</button>
-            </div>`;
+        if (!resultEl) return;
+
+        if (!sp) {
+          resultEl.innerHTML = `<div style="color:#9ca3af;font-size:0.85rem;padding:8px 0">No speech detected — try again.</div>`;
+          return;
         }
 
+        const pColor = pronScore === null ? '#6b7280'
+          : pronScore >= 80 ? '#16a34a' : pronScore >= 55 ? '#d97706' : '#dc2626';
+        const gColor = gram.score >= 80 ? '#16a34a' : gram.score >= 55 ? '#d97706' : '#dc2626';
+
+        resultEl.innerHTML = `
+          <div class="sb-score-block">
+            ${pronScore !== null ? `
+            <div class="sb-dual-row">
+              <span class="sb-dual-label">🎤 Pronunciation</span>
+              <div class="sb-dual-bar">
+                <div class="st-score-bar"><div class="st-score-fill" style="width:${pronScore}%;background:${pColor}"></div></div>
+              </div>
+              <span class="sb-dual-pct" style="color:${pColor}">${pronScore}%</span>
+            </div>` : ''}
+            <div class="sb-dual-row">
+              <span class="sb-dual-label">📝 Grammar</span>
+              <div class="sb-dual-bar">
+                <div class="st-score-bar"><div class="st-score-fill" style="width:${gram.score}%;background:${gColor}"></div></div>
+              </div>
+              <span class="sb-dual-pct" style="color:${gColor}">${gram.score}%</span>
+            </div>
+            ${gram.tips.map(t => `<div class="sb-gram-tip">💡 ${t}</div>`).join('')}
+          </div>
+          <div class="action-row" style="margin-top:10px">
+            <button class="btn btn-ghost"  onclick="sbSpeak(${id})">🔊 Sample Answer</button>
+            <button class="btn btn-green"  onclick="sbRecord(${id})">🔁 Try Again</button>
+            <button class="btn btn-indigo" onclick="sbNext()">Next →</button>
+          </div>`;
+
         const st = document.getElementById('sb-status-' + id);
-        if (st) st.textContent = score >= 80 ? '✅ Great answer!' : '📖 Compare with the sample answer below';
+        if (st) st.textContent =
+          gram.score >= 80 && (pronScore === null || pronScore >= 70)
+            ? '✅ Great response!'
+            : '💡 See feedback below';
       }

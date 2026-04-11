@@ -362,6 +362,35 @@
       .sb-score-block {
         margin-top: 8px;
       }
+      .sb-dual-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+      .sb-dual-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #374151;
+        width: 110px;
+        flex-shrink: 0;
+      }
+      .sb-dual-bar {
+        flex: 1;
+      }
+      .sb-dual-pct {
+        font-size: 0.82rem;
+        font-weight: 700;
+        width: 38px;
+        text-align: right;
+        flex-shrink: 0;
+      }
+      .sb-gram-tip {
+        font-size: 0.76rem;
+        color: #6b7280;
+        margin-top: 4px;
+        padding-left: 4px;
+      }
       .sb-actions {
         display: flex;
         gap: 8px;
