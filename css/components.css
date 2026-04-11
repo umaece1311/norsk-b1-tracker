@@ -175,6 +175,170 @@
         border-left: 3px solid #fca5a5;
       }
 
+      /* ── Sentence Practice Panel ── */
+      .st-sent-panel { margin-top: 12px; }
+      .sent-prac-box {
+        background: #fafaff;
+        border: 1.5px solid #c7d2fe;
+        border-radius: 12px;
+        padding: 18px;
+      }
+      .sent-prac-header { margin-bottom: 14px; }
+      .sent-prac-progress {
+        display: block;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #6366f1;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 6px;
+      }
+      .sent-prac-prog-bar {
+        height: 5px;
+        background: #e0e7ff;
+        border-radius: 99px;
+        overflow: hidden;
+      }
+      .sent-prac-prog-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #6366f1, #a78bfa);
+        border-radius: 99px;
+        transition: width 0.4s ease;
+      }
+      .sent-prac-sentence {
+        font-family: 'Fraunces', serif;
+        font-size: 1.25rem;
+        color: #1e293b;
+        line-height: 1.6;
+        padding: 16px 18px;
+        background: #fff;
+        border-radius: 10px;
+        border-left: 4px solid #6366f1;
+        margin-bottom: 14px;
+        box-shadow: 0 1px 4px rgba(99,102,241,0.08);
+      }
+      .sent-prac-controls {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+      .sent-prac-status {
+        font-size: 0.8rem;
+        color: #64748b;
+        min-height: 18px;
+        margin-bottom: 4px;
+      }
+      .sent-prac-nav {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #e0e7ff;
+      }
+
+      /* ── Study Mode Toggle Bar ── */
+      .study-mode-bar {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 6px;
+      }
+      .study-mode-btn {
+        flex: 1;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: none;
+        background: transparent;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #64748b;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .study-mode-btn.active {
+        background: #fff;
+        color: #1e293b;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      }
+      .study-mode-btn:hover:not(.active) { background: #f1f5f9; }
+
+      /* ── Sentence Bank ── */
+      .sb-nav-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+      .sb-cat-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 14px;
+      }
+      .sb-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 22px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      }
+      .sb-qa-block {
+        margin-bottom: 14px;
+      }
+      .sb-qa-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 5px;
+      }
+      .sb-question {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1e293b;
+        padding: 10px 14px;
+        background: #f0f9ff;
+        border-left: 4px solid #38bdf8;
+        border-radius: 8px;
+        margin-bottom: 4px;
+      }
+      .sb-qen {
+        font-size: 0.84rem;
+        color: #64748b;
+        padding: 4px 8px;
+        font-style: italic;
+      }
+      .sb-sentence {
+        font-family: 'Fraunces', serif;
+        font-size: 1.25rem;
+        color: #1e293b;
+        line-height: 1.6;
+        padding: 14px 18px;
+        background: #fafaff;
+        border-left: 4px solid #6366f1;
+        border-radius: 10px;
+        margin-bottom: 4px;
+      }
+      .sb-en-text {
+        font-size: 0.92rem;
+        color: #374151;
+        padding: 10px 14px;
+        background: #f0fdf4;
+        border-radius: 8px;
+        border-left: 3px solid #4ade80;
+      }
+      .sb-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+
       /* ── Cards ── */
       .card {
         background: #fff;
@@ -326,6 +490,14 @@
       .btn-green:hover {
         background: #a7f3d0;
       }
+      .btn-indigo {
+        background: #e0e7ff;
+        color: #4338ca;
+        font-weight: 600;
+      }
+      .btn-indigo:hover {
+        background: #c7d2fe;
+      }
       .btn-review-active {
         background: #fef3c7;
         color: #92400e;
@@ -436,111 +608,116 @@
         color: #92400e;
       }
       .cv-list {
-        padding: 6px 10px 10px;
+        padding: 8px 10px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
       }
       .cv-row {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
         gap: 6px;
-        padding: 7px 4px;
-        border-bottom: 1px solid #fef3c7;
+        padding: 9px 12px;
+        border-radius: 10px;
+        background: #fafafa;
+        border: 1px solid #f1f5f9;
+        transition: background 0.15s;
       }
-      .cv-row:last-child {
-        border-bottom: none;
-      }
+      .cv-row:hover { background: #f0f9ff; border-color: #bae6fd; }
       .cv-word-info {
         flex: 1;
-        min-width: 100px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        min-width: 80px;
       }
       .cv-word {
         font-weight: 700;
-        font-size: 0.88rem;
-        color: #1a2235;
+        font-size: 0.92rem;
+        color: #1e293b;
+        display: block;
       }
       .cv-trans {
-        font-size: 0.78rem;
+        font-size: 0.75rem;
         color: #2563eb;
         font-style: italic;
       }
       .cv-actions {
         display: flex;
         gap: 5px;
+        flex-shrink: 0;
       }
       .cv-btn {
         border: none;
         cursor: pointer;
-        border-radius: 6px;
+        border-radius: 8px;
         font-size: 0.75rem;
         font-family: 'DM Sans', sans-serif;
-        padding: 4px 10px;
-        font-weight: 500;
+        font-weight: 600;
+        padding: 5px 11px;
         transition: all 0.15s;
       }
       .cv-audio-btn {
         background: #e0f2fe;
         color: #0369a1;
+        padding: 5px 8px;
       }
       .cv-audio-btn:hover { background: #bae6fd; }
       .cv-prac-btn {
         background: #d1fae5;
         color: #065f46;
       }
-      .cv-prac-btn:hover { background: #a7f3d0; }
-      .cv-prac-area {
+      .cv-prac-btn:hover:not(:disabled) { background: #a7f3d0; }
+      .cv-prac-btn.recording {
+        background: #fee2e2;
+        color: #dc2626;
+        cursor: default;
+        min-width: 90px;
+        text-align: left;
+      }
+      .cv-prac-btn.retry {
+        background: #e0e7ff;
+        color: #4338ca;
+      }
+      .cv-prac-btn.retry:hover { background: #c7d2fe; }
+      .cv-inline-result {
         width: 100%;
-        margin-top: 4px;
       }
-      .cv-prac-controls {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        flex-wrap: wrap;
-        margin-bottom: 5px;
-      }
-      .cv-prac-hint {
-        font-size: 0.76rem;
-        color: #6b7280;
-      }
-      .cv-score-row {
+      .cv-score-inline {
         display: flex;
         align-items: center;
         gap: 8px;
-        background: #f0fdf4;
-        border-radius: 6px;
         padding: 6px 10px;
-        margin-bottom: 4px;
+        border-radius: 7px;
+        border: 1px solid #e2e8f0;
+        margin-top: 2px;
       }
-      .cv-score-num {
-        font-family: 'Fraunces', serif;
-        font-size: 1.3rem;
+      .cv-score-badge {
+        font-size: 0.88rem;
         font-weight: 700;
+        min-width: 34px;
         flex-shrink: 0;
       }
-      .cv-score-bar {
+      .cv-score-bar-mini {
         flex: 1;
-        height: 6px;
+        height: 5px;
         background: #e5e7eb;
         border-radius: 99px;
         overflow: hidden;
       }
-      .cv-score-fill {
+      .cv-score-fill-mini {
         height: 100%;
         border-radius: 99px;
-        transition: width 0.4s;
+        transition: width 0.5s ease;
       }
-      .cv-score-msg {
-        font-size: 0.75rem;
-        font-weight: 600;
+      .cv-score-label {
+        font-size: 0.72rem;
+        font-weight: 700;
         white-space: nowrap;
       }
-      .cv-you-said {
-        font-size: 0.72rem;
-        color: #6b7280;
-        padding: 2px 4px;
+      .cv-you-said-mini {
+        font-size: 0.7rem;
+        color: #94a3b8;
+        margin-top: 3px;
+        padding-left: 2px;
       }
 
       /* ── Translation Panel ── */

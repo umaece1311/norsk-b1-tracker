@@ -1,6 +1,5 @@
       // ─── PER-CARD VOCABULARY PANEL ────────────────────────────────────────────────
-      // Extracts words from a specific question + user answer + sample answer.
-      // Shows inline audio (TTS) and per-word pronunciation practice on the card.
+      // Extracts words from a question + answers. One-click Practice → record → score.
 
       const _cvState = {}; // key = "qId_safeWord" → { rec, mediaRec, stream, transcript }
 
@@ -56,52 +55,53 @@
               ${trans}
             </div>
             <div class="cv-actions">
-              <button class="cv-btn cv-audio-btn" onclick="speakVocabWord('${esc}')" title="Hear pronunciation">🔊</button>
+              <button class="cv-btn cv-audio-btn"
+                onclick="speakVocabWord('${esc}')" title="Hear pronunciation">🔊</button>
               <button class="cv-btn cv-prac-btn" id="cvpbtn-${qId}-${safeId}"
-                onclick="toggleCardWordPractice(${qId},'${esc}')">🎤 Practice</button>
+                onclick="startCardWordRecording(${qId},'${esc}')">🎤 Practice</button>
             </div>
-            <div class="cv-prac-area hidden" id="cvprac-${qId}-${safeId}">
-              <div class="cv-prac-controls">
-                <button class="btn btn-green" style="font-size:0.72rem;padding:4px 10px"
-                  id="cv-rec-${qId}-${safeId}" onclick="startCardWordRecording(${qId},'${esc}')">⏺ Record</button>
-                <button class="btn btn-danger hidden" style="font-size:0.72rem;padding:4px 10px"
-                  id="cv-stop-${qId}-${safeId}" onclick="stopCardWordRecording(${qId},'${esc}')">⏹ Stop</button>
-                <span class="cv-prac-hint" id="cv-hint-${qId}-${safeId}">Say "<strong>${word}</strong>"</span>
-              </div>
-              <div id="cv-result-${qId}-${safeId}"></div>
-            </div>
+            <div class="cv-inline-result" id="cv-result-${qId}-${safeId}"></div>
           </div>`;
       }
 
-      function toggleCardWordPractice(qId, word) {
-        const safeId = word.replace(/[^a-zæøå]/g, '_');
-        const area   = document.getElementById('cvprac-' + qId + '-' + safeId);
-        if (area) area.classList.toggle('hidden');
-      }
-
+      // ── Recording (1-click: Practice → record → auto-stop → score) ───────────────
       async function startCardWordRecording(qId, word) {
         const safeId = word.replace(/[^a-zæøå]/g, '_');
         const key    = qId + '_' + safeId;
+        const btn    = document.getElementById('cvpbtn-' + qId + '-' + safeId);
+
+        // If already recording for this word, ignore
+        if (btn && btn.classList.contains('recording')) return;
+
+        // Update button to recording state
+        if (btn) {
+          btn.classList.add('recording');
+          btn.textContent = '🔴 Listening…';
+          btn.disabled    = true;
+        }
+
+        // Clear previous result
+        const resultEl = document.getElementById('cv-result-' + qId + '-' + safeId);
+        if (resultEl) resultEl.innerHTML = '';
 
         let stream;
         try {
           stream = await navigator.mediaDevices.getUserMedia(getMicConstraints());
         } catch (e) {
-          const hint = document.getElementById('cv-hint-' + qId + '-' + safeId);
-          if (hint) hint.textContent = '❌ Mic denied. Allow microphone access.';
+          if (btn) { btn.classList.remove('recording'); btn.textContent = '🎤 Practice'; btn.disabled = false; }
+          if (resultEl) resultEl.innerHTML = `<span style="font-size:0.72rem;color:#dc2626">❌ Mic denied</span>`;
           return;
         }
 
         _cvState[key] = { transcript: '', stream };
 
-        // ── SpeechRecognition ─────────────────────────────────────────────────────
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SR) {
           const rec = new SR();
-          rec.lang = 'nb-NO';
-          rec.continuous = false;
+          rec.lang           = 'nb-NO';
+          rec.continuous     = false;
           rec.interimResults = true;
-          _cvState[key].rec = rec;
+          _cvState[key].rec  = rec;
 
           rec.onresult = e => {
             let final = '', interim = '';
@@ -110,29 +110,30 @@
               if (e.results[i].isFinal) final += t; else interim += t;
             }
             _cvState[key].transcript += final;
-            const hint = document.getElementById('cv-hint-' + qId + '-' + safeId);
-            if (hint) hint.innerHTML = (_cvState[key].transcript + interim).trim() || '…listening';
+            // Show interim text in button
+            const live = (_cvState[key].transcript + interim).trim();
+            if (btn && live) btn.textContent = '🔴 ' + live.slice(0, 18) + (live.length > 18 ? '…' : '');
             // Auto-stop as soon as a final result arrives (single word)
             if (final.trim()) {
               clearTimeout(_cvState[key].autoStop);
-              setTimeout(() => stopCardWordRecording(qId, word), 300);
+              setTimeout(() => _cvStopAndScore(qId, word, safeId, key), 300);
             }
           };
           rec.onend = () => {
             clearTimeout(_cvState[key]?.autoStop);
             if (_cvState[key]?.mediaRec?.state !== 'inactive') {
-              try { _cvState[key].mediaRec.stop(); } catch(e) {}
+              try { _cvState[key].mediaRec.stop(); } catch (e) {}
             }
             _finishCardWord(qId, word, safeId, key);
           };
-          rec.onerror = () => {};
+          rec.onerror = () => { _cvStopAndScore(qId, word, safeId, key); };
           try { rec.start(); } catch (e) {}
         }
 
-        // Auto-stop fallback after 5s if no speech detected
-        _cvState[key].autoStop = setTimeout(() => stopCardWordRecording(qId, word), 5000);
+        // 5s auto-stop fallback
+        _cvState[key].autoStop = setTimeout(() => _cvStopAndScore(qId, word, safeId, key), 5000);
 
-        // ── MediaRecorder ─────────────────────────────────────────────────────────
+        // MediaRecorder
         const mr = new MediaRecorder(stream, {
           mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg',
         });
@@ -143,29 +144,16 @@
           if (!SR) _finishCardWord(qId, word, safeId, key);
         };
         mr.start();
-
-        // Update UI — no manual Stop needed, auto-stops after word detected
-        const _recBtn  = document.getElementById('cv-rec-'  + qId + '-' + safeId);
-        const _stopBtn = document.getElementById('cv-stop-' + qId + '-' + safeId);
-        if (_recBtn)  _recBtn.classList.add('hidden');
-        if (_stopBtn) _stopBtn.classList.add('hidden'); // hidden — auto-stop handles it
-        const hint = document.getElementById('cv-hint-' + qId + '-' + safeId);
-        if (hint) hint.innerHTML = `🔴 Say <strong>${word}</strong> — stops automatically`;
-        const result = document.getElementById('cv-result-' + qId + '-' + safeId);
-        if (result) result.innerHTML = '';
       }
 
-      function stopCardWordRecording(qId, word) {
-        const safeId = word.replace(/[^a-zæøå]/g, '_');
-        const key    = qId + '_' + safeId;
-        const p      = _cvState[key];
+      function _cvStopAndScore(qId, word, safeId, key) {
+        const p = _cvState[key];
         if (!p) return;
         clearTimeout(p.autoStop);
         if (p.rec) { try { p.rec.stop(); } catch (e) {} }
         if (p.mediaRec && p.mediaRec.state !== 'inactive') {
           try { p.mediaRec.stop(); } catch (e) {}
         }
-        _setCvButtons(qId, safeId, false);
       }
 
       function _finishCardWord(qId, word, safeId, key) {
@@ -174,30 +162,32 @@
           ? Math.round(wordSim(spoken.toLowerCase(), word.toLowerCase()) * 100)
           : 0;
 
-        const color = score >= 80 ? '#16a34a' : score >= 55 ? '#d97706' : '#dc2626';
-        const msg   = score >= 80 ? '🎉 Excellent!' : score >= 55 ? '👍 Good — keep going!' : '💪 Try again!';
+        const color  = score >= 80 ? '#16a34a' : score >= 55 ? '#d97706' : '#dc2626';
+        const bg     = score >= 80 ? '#f0fdf4' : score >= 55 ? '#fffbeb' : '#fef2f2';
+        const border = score >= 80 ? '#bbf7d0' : score >= 55 ? '#fde68a' : '#fecaca';
+        const msg    = score >= 80 ? '🎉 Excellent!' : score >= 55 ? '👍 Good!' : '💪 Try again';
 
         const resultEl = document.getElementById('cv-result-' + qId + '-' + safeId);
         if (resultEl) {
           resultEl.innerHTML = `
-            <div class="cv-score-row">
-              <span class="cv-score-num" style="color:${color}">${score}%</span>
-              <div class="cv-score-bar"><div class="cv-score-fill" style="width:${score}%;background:${color}"></div></div>
-              <span class="cv-score-msg" style="color:${color}">${msg}</span>
+            <div class="cv-score-inline" style="background:${bg};border-color:${border}">
+              <span class="cv-score-badge" style="color:${color}">${score}%</span>
+              <div class="cv-score-bar-mini">
+                <div class="cv-score-fill-mini" style="width:${score}%;background:${color}"></div>
+              </div>
+              <span class="cv-score-label" style="color:${color}">${msg}</span>
             </div>
-            ${spoken ? `<div class="cv-you-said">You said: <em>"${spoken}"</em></div>` : ''}`;
+            ${spoken ? `<div class="cv-you-said-mini">You said: "<em>${spoken}</em>"</div>` : ''}`;
         }
 
-        const hint = document.getElementById('cv-hint-' + qId + '-' + safeId);
-        if (hint) hint.innerHTML = `Say "<strong>${word}</strong>"`;
-        _setCvButtons(qId, safeId, false);
-      }
-
-      function _setCvButtons(qId, safeId, recording) {
-        const rec  = document.getElementById('cv-rec-' + qId + '-' + safeId);
-        const stop = document.getElementById('cv-stop-' + qId + '-' + safeId);
-        if (rec)  rec.classList.toggle('hidden', recording);
-        if (stop) stop.classList.toggle('hidden', !recording);
+        // Reset button to "Retry"
+        const btn = document.getElementById('cvpbtn-' + qId + '-' + safeId);
+        if (btn) {
+          btn.classList.remove('recording');
+          btn.classList.add('retry');
+          btn.textContent = '🔄 Retry';
+          btn.disabled    = false;
+        }
       }
 
       // ── Add all words from card to global vocab ───────────────────────────────────
