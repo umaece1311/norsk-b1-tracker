@@ -15,9 +15,8 @@
       }
 
       function _cardVocabWords(q) {
-        // Only question text + user's own answer — NOT the sample answer
-        const text = [q.q, state.answers[q.id] || ''].join(' ');
-        return extractWords(text);
+        // Only the user's own written answer for this question
+        return extractWords(state.answers[q.id] || '');
       }
 
       function renderCardVocab(qId) {
@@ -27,15 +26,21 @@
         if (!q) return;
         ensureVocabInState();
 
+        const myAns = (state.answers[q.id] || '').trim();
+        if (!myAns) {
+          panel.innerHTML = `<div class="cv-empty">Write your answer first — vocabulary will appear here from what you write.</div>`;
+          return;
+        }
+
         const words = _cardVocabWords(q);
         if (!words.length) {
-          panel.innerHTML = `<div class="cv-empty">No vocabulary words found in this question.</div>`;
+          panel.innerHTML = `<div class="cv-empty">No vocabulary words found in your answer.</div>`;
           return;
         }
 
         panel.innerHTML = `
           <div class="cv-header">
-            <span class="cv-header-title">📚 ${words.length} word${words.length !== 1 ? 's' : ''} from this question</span>
+            <span class="cv-header-title">📚 ${words.length} word${words.length !== 1 ? 's' : ''} from your answer</span>
             <button class="btn btn-gray" style="font-size:0.72rem;padding:3px 10px"
               onclick="addCardVocabToMain(${qId})">＋ Add all to My Vocab</button>
           </div>
