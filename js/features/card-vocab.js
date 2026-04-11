@@ -15,8 +15,9 @@
       }
 
       function _cardVocabWords(q) {
-        const text = [q.q, q.a || '', state.answers[q.id] || ''].join(' ');
-        return extractWords(text); // extractWords + NO_STOP from vocabulary.js
+        // Only question text + user's own answer — NOT the sample answer
+        const text = [q.q, state.answers[q.id] || ''].join(' ');
+        return extractWords(text);
       }
 
       function renderCardVocab(qId) {
