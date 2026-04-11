@@ -1,7 +1,7 @@
       // ─── TRANSLATION ──────────────────────────────────────────────────────────────
       // ─── TRANSLATION ENGINE — free, no API key ────────────────────────────────────
-      // Primary:  MyMemory  (https://api.mymemory.translated.net)  — 5000 chars/day free
-      // Fallback: Lingva    (https://lingva.ml)                     — open source, unlimited
+      // Primary:  Google Translate unofficial  (translate.googleapis.com) — reliable, no key
+      // Fallback: MyMemory  (api.mymemory.translated.net)  — 5000 chars/day free
       // Both require no account or API key.
 
       const _transCache = {}; // cache[key] = translated string
@@ -49,10 +49,30 @@
         const key = `${from}|${to}|${text}`;
         if (_transCache[key]) return { text: _transCache[key], api: 'cache' };
 
-        // ── 1. MyMemory ────────────────────────────────────────────────────
+        // ── 1. Google Translate (unofficial, no key needed) ────────────────
+        try {
+          const gFrom = from === 'no' ? 'no' : from;
+          const gTo   = to   === 'no' ? 'no' : to;
+          const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${gFrom}&tl=${gTo}&dt=t&q=${encodeURIComponent(text)}`;
+          const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
+          const d = await r.json();
+          // Response: [ [ ["translated","original",...], ... ], null, "detected_lang" ]
+          if (Array.isArray(d) && Array.isArray(d[0])) {
+            const translated = d[0].map(seg => seg[0] || '').join('');
+            if (translated.trim()) {
+              const decoded = decodeHtmlEntities(translated);
+              _transCache[key] = decoded;
+              return { text: decoded, api: 'Google' };
+            }
+          }
+        } catch (_) {
+          /* fall through */
+        }
+
+        // ── 2. MyMemory (fallback) ─────────────────────────────────────────
         try {
           const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${from}|${to}`;
-          const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
+          const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
           const d = await r.json();
           if (
             d.responseStatus === 200 &&
@@ -67,24 +87,8 @@
           /* fall through */
         }
 
-        // ── 2. Lingva Translate (fallback) ─────────────────────────────────
-        try {
-          const lFrom = from === 'no' ? 'nb' : from;
-          const lTo = to === 'no' ? 'nb' : to;
-          const url = `https://lingva.ml/api/v1/${lFrom}/${lTo}/${encodeURIComponent(text)}`;
-          const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
-          const d = await r.json();
-          if (d.translation) {
-            const decodedL = decodeHtmlEntities(d.translation);
-            _transCache[key] = decodedL;
-            return { text: decodedL, api: 'Lingva' };
-          }
-        } catch (_) {
-          /* fall through */
-        }
-
         throw new Error(
-          'Both translation services are unavailable. Check your internet connection.'
+          'Translation unavailable. Check your internet connection.'
         );
       }
 
