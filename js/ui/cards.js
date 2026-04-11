@@ -52,7 +52,9 @@
       <button class="btn btn-ghost" onclick="speakText(${q.id},'a')">🔊 Answer</button>
       <button class="btn btn-green" onclick="togglePronunciation(${q.id})">🎤 Pronunciation</button>
       ${opts.showTimer ? `<button class="btn btn-gray" onclick="toggleCardTimer(${q.id},'${q.examType || 'A'}')">⏱ Timer</button>` : ''}
-      <button class="btn btn-ghost" onclick="getGrammarFeedback(${q.id})" title="${'🤖 Grammar check (add Groq key for AI feedback)'}">🤖 AI Grammar${''}</button>
+      <button class="btn ${state.reviewMarked[q.id] ? 'btn-review-active' : 'btn-gray'}" id="reviewBtn-${q.id}" onclick="toggleReview(${q.id})">
+        🔖 ${state.reviewMarked[q.id] ? 'In Review' : 'Add to Review'}
+      </button>
     </div>
 
     <div id="trans-${q.id}" class="hidden trans-panel">
@@ -102,14 +104,6 @@
         <button class="btn btn-gray" onclick="cardTimerPause(${q.id})">⏸ Pause</button>
         <button class="btn btn-gray" onclick="cardTimerReset(${q.id},'${q.examType || 'A'}')">↩ Reset</button>
       </div>
-    </div>
-    <div id="ai-${q.id}" class="hidden ai-box">
-      <h4>🤖 AI Grammar Feedback</h4>
-      ${!state.apiKey ? `<div style="display:flex;gap:6px;margin-bottom:8px">
-        <input type="password" id="groq-key-inline-${q.id}" placeholder="Paste Groq key (gsk_...)" style="flex:1;border:1.5px solid #d1d5db;border-radius:8px;padding:7px 10px;font-size:0.82rem;font-family:monospace" />
-        <button onclick="saveInlineKey(${q.id})" style="background:#2563eb;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:0.82rem;cursor:pointer;font-weight:700">Save</button>
-      </div>` : ``}
-      <div class="ai-result" id="aiResult-${q.id}"></div>
     </div>
   </div>`;
       }

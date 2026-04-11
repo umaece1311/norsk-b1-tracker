@@ -149,6 +149,62 @@
       .btn-green:hover {
         background: #a7f3d0;
       }
+      .btn-review-active {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1.5px solid #fde68a;
+      }
+      .btn-review-active:hover {
+        background: #fde68a;
+      }
+
+      /* ── Review list items ── */
+      .review-item {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: #fff;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .review-item:hover {
+        border-color: #2563eb;
+        box-shadow: 0 2px 12px rgba(37,99,235,0.1);
+        transform: translateX(2px);
+      }
+      .review-item-num {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #94a3b8;
+        width: 22px;
+        flex-shrink: 0;
+        text-align: center;
+      }
+      .review-item-body {
+        flex: 1;
+        min-width: 0;
+      }
+      .review-item-meta {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-bottom: 6px;
+      }
+      .review-item-q {
+        font-family: 'Fraunces', serif;
+        font-size: 0.95rem;
+        color: #1a2235;
+        line-height: 1.4;
+      }
+      .review-item-arrow {
+        font-size: 1.2rem;
+        color: #94a3b8;
+        flex-shrink: 0;
+      }
       .action-row {
         display: flex;
         gap: 8px;

@@ -3,6 +3,7 @@
         answers: {}, // id -> string
         status: {}, // id -> 'new'|'learning'|'done'
         timestamps: {}, // id -> ISO date string
+        reviewMarked: {}, // id -> true (marked for review)
         customQs: [],
         apiKey: '',
         todayIds: [],
