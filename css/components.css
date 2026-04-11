@@ -933,6 +933,100 @@
         display: none;
       }
 
+      /* ── Vocab view toggle ── */
+      .vocab-view-toggle {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 14px;
+      }
+      .vocab-view-btn {
+        padding: 6px 16px;
+        border-radius: 20px;
+        border: 1.5px solid #e2e8f0;
+        background: #f8fafc;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #64748b;
+        cursor: pointer;
+      }
+      .vocab-view-btn.active {
+        background: #1a2235;
+        color: #fff;
+        border-color: #1a2235;
+      }
+
+      /* ── By-Question vocab view ── */
+      .vbq-section {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        margin-bottom: 8px;
+        overflow: hidden;
+      }
+      .vbq-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        background: #f8fafc;
+        cursor: pointer;
+        flex-wrap: wrap;
+      }
+      .vbq-header:hover {
+        background: #f1f5f9;
+      }
+      .vbq-q {
+        flex: 1;
+        font-size: 0.84rem;
+        font-weight: 600;
+        color: #1a2235;
+        min-width: 0;
+      }
+      .vbq-count {
+        font-size: 0.74rem;
+        color: #64748b;
+        white-space: nowrap;
+      }
+      .vbq-arrow {
+        font-size: 0.8rem;
+        color: #94a3b8;
+      }
+      .vbq-body {
+        padding: 10px 14px 14px;
+        background: #fff;
+      }
+      .vbq-words {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .vbq-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 20px;
+        padding: 3px 10px 3px 10px;
+        font-size: 0.8rem;
+      }
+      .vbq-no {
+        font-weight: 600;
+        color: #14532d;
+      }
+      .vbq-en {
+        color: #2563eb;
+        font-style: italic;
+        font-size: 0.76rem;
+      }
+      .vbq-audio {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        font-size: 0.78rem;
+        line-height: 1;
+      }
+
       /* ── Filters ── */
       .filter-bar {
         display: flex;

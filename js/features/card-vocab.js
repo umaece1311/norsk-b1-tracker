@@ -198,7 +198,7 @@
         const words = _cardVocabWords(q);
         let added = 0;
         for (const w of words) {
-          if (!state.vocab[w]) { await addVocabWord(w, 'answer'); added++; }
+          if (!state.vocab[w]) { await addVocabWord(w, 'card', qId); added++; }
         }
         saveState();
         showToast(`✅ Added ${added} word${added !== 1 ? 's' : ''} to My Vocabulary!`);

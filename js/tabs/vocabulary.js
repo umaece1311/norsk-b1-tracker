@@ -143,7 +143,7 @@
         if (!state.vocab) state.vocab = {};
       }
 
-      async function addVocabWord(word, source) {
+      async function addVocabWord(word, source, qId) {
         ensureVocabInState();
         word = word.toLowerCase().trim();
         if (!word || state.vocab[word]) return false;
@@ -152,6 +152,7 @@
           en: null,
           example: null,
           source: source || 'manual',
+          qId:    qId    || null,
           added: new Date().toISOString().slice(0, 10),
           status: 'new',
           present: conj?.present || null,
@@ -279,9 +280,10 @@
         renderVocabTable();
       }
 
-      // ── Filters ───────────────────────────────────────────────────────────────────
+      // ── Filters / view ───────────────────────────────────────────────────────────
       let _vocabFilter = 'all';
       let _vocabSearch = '';
+      let _vocabView   = 'byQuestion'; // 'list' | 'byQuestion'
 
       function getFilteredVocab() {
         ensureVocabInState();
@@ -331,7 +333,13 @@
             <input id="vocab-add-ex" placeholder="Example sentence (optional)">
             <button class="btn btn-primary" onclick="addVocabManual()">➕ Add</button>
           </div>
-          <div class="vocab-toolbar">
+          <div class="vocab-view-toggle">
+            <button class="vocab-view-btn${_vocabView==='byQuestion'?' active':''}"
+              onclick="_vocabView='byQuestion';renderVocabTable()">📚 By Question</button>
+            <button class="vocab-view-btn${_vocabView==='list'?' active':''}"
+              onclick="_vocabView='list';renderVocabTable()">📋 All Words</button>
+          </div>
+          <div class="vocab-toolbar" id="vocab-toolbar-list" style="${_vocabView==='byQuestion'?'display:none':''}">
             <input class="vocab-search" id="vocab-search-inp" placeholder="🔎 Search words or translations…"
               value="${_vocabSearch}"
               oninput="_vocabSearch=this.value.toLowerCase();renderVocabTable()">
@@ -352,6 +360,10 @@
       function renderVocabTable() {
         const container = document.getElementById('vocab-table-container');
         if (!container) return;
+        if (_vocabView === 'byQuestion') {
+          renderVocabByQuestion(container);
+          return;
+        }
         const entries = getFilteredVocab();
         if (!entries.length) {
           container.innerHTML = `<div style="text-align:center;padding:44px;color:#94a3b8;font-size:0.9rem">
@@ -416,6 +428,46 @@
             ${entries.length} word${entries.length!==1?'s':''} shown.
             Click any conjugation cell to edit. Click <strong>Status</strong> to cycle: 🆕 New → 📚 Learning → ✅ Known.
           </div>`;
+      }
+
+      // ── By-Question view ─────────────────────────────────────────────────────────
+      function renderVocabByQuestion(container) {
+        const questions = allQuestions();
+        if (!questions.length) {
+          container.innerHTML = `<div style="text-align:center;padding:44px;color:#94a3b8">No questions found.</div>`;
+          return;
+        }
+        ensureVocabInState();
+
+        container.innerHTML = questions.map(q => {
+          const words   = extractWords([q.q, q.a || '', state.answers[q.id] || ''].join(' '));
+          const hasAns  = !!state.answers[q.id]?.trim();
+
+          return `
+            <div class="vbq-section">
+              <div class="vbq-header" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                <span class="cat-badge ${catClass(q.cat)}">${catLabel(q.cat)}</span>
+                <span class="vbq-q">${q.q}</span>
+                <span class="vbq-count">${words.length} words ${hasAns ? '✏️' : ''}</span>
+                <span class="vbq-arrow">▼</span>
+              </div>
+              <div class="vbq-body hidden">
+                ${!words.length
+                  ? '<em style="color:#9ca3af;font-size:0.8rem;padding:6px">No content words found.</em>'
+                  : `<div class="vbq-words">${words.map(w => {
+                      const entry = state.vocab[w];
+                      const en    = entry?.en || '';
+                      const esc   = w.replace(/'/g,"\\'");
+                      return `<span class="vbq-chip">
+                        <span class="vbq-no">${w}</span>
+                        ${en ? `<span class="vbq-en">${en}</span>` : ''}
+                        <button class="vbq-audio" onclick="speakVocabWord('${esc}')" title="Hear">🔊</button>
+                      </span>`;
+                    }).join('')}</div>`
+                }
+              </div>
+            </div>`;
+        }).join('');
       }
 
       // ── Individual translate ───────────────────────────────────────────────────────
