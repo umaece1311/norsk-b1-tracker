@@ -655,7 +655,7 @@
 
           <!-- ADD QUESTION TAB -->
           <div id="tab-add" class="hidden">
-            <h2 style="font-size: 1.5rem; margin-bottom: 20px">
+            <h2 id="add-form-title" style="font-size: 1.5rem; margin-bottom: 20px">
               &#10133; Add Custom Question
             </h2>
             <div class="add-form">
@@ -691,13 +691,31 @@
                   </select>
                 </div>
               </div>
-              <button
-                class="btn btn-primary"
-                style="padding: 10px 24px"
-                onclick="addQuestion()"
-              >
-                Add Question
-              </button>
+              <div style="display:flex;gap:8px;align-items:center">
+                <button
+                  id="add-submit-btn"
+                  class="btn btn-primary"
+                  style="padding: 10px 24px"
+                  onclick="addQuestion()"
+                >
+                  Add Question
+                </button>
+                <button
+                  class="btn btn-gray"
+                  style="padding:10px 16px;display:none"
+                  id="add-cancel-btn"
+                  onclick="cancelEditQ();this.style.display='none'"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+
+            <div style="margin-top:28px">
+              <h3 style="font-size:1rem;font-weight:700;margin-bottom:12px;color:#1a2235">
+                📋 My Custom Questions
+              </h3>
+              <div id="custom-q-list"></div>
             </div>
           </div>
           <!-- ADMIN TAB (owner only) -->

@@ -1329,8 +1329,99 @@
       .sb-custom-actions {
         display: flex;
         gap: 8px;
-        margin-top: 8px;
-        padding-top: 8px;
+        margin-top: 10px;
+        padding-top: 10px;
         border-top: 1px solid #f1f5f9;
       }
+      .btn-qb-edit {
+        padding: 6px 14px;
+        border-radius: 8px;
+        border: 1.5px solid #6366f1;
+        background: #eef2ff;
+        color: #4338ca;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .btn-qb-edit:hover { background: #e0e7ff; }
+      .btn-qb-delete {
+        padding: 6px 14px;
+        border-radius: 8px;
+        border: 1.5px solid #f87171;
+        background: #fef2f2;
+        color: #dc2626;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .btn-qb-delete:hover { background: #fee2e2; }
+
+      /* ── Restore hidden panel ── */
+      .sb-restore-panel {
+        border: 2px solid #fde68a;
+        background: #fffbeb;
+        margin-bottom: 10px;
+      }
+      .sb-restore-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+        border-bottom: 1px solid #fef3c7;
+      }
+      .sb-restore-row:last-child { border-bottom: none; }
+
+      /* ── Custom Q list in Add tab ── */
+      .custom-q-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        margin-bottom: 6px;
+        background: #fff;
+      }
+      .custom-q-info {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+      .custom-q-text {
+        font-size: 0.85rem;
+        color: #1a2235;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .custom-q-actions {
+        display: flex;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+      .btn-cq-edit {
+        padding: 5px 12px;
+        border-radius: 8px;
+        border: 1.5px solid #6366f1;
+        background: #eef2ff;
+        color: #4338ca;
+        font-size: 0.76rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .btn-cq-edit:hover { background: #e0e7ff; }
+      .btn-cq-delete {
+        padding: 5px 12px;
+        border-radius: 8px;
+        border: 1.5px solid #f87171;
+        background: #fef2f2;
+        color: #dc2626;
+        font-size: 0.76rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .btn-cq-delete:hover { background: #fee2e2; }
 

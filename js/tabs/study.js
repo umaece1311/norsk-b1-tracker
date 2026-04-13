@@ -66,19 +66,24 @@
 
         const customActions = sent.custom ? `
           <div class="sb-custom-actions">
-            <button class="btn btn-ghost" style="font-size:0.76rem" onclick="sbShowEditForm('${sent.id}')">✏️ Edit</button>
-            <button class="btn btn-danger" style="font-size:0.76rem" onclick="sbDeleteQuestion('${sent.id}')">🗑 Delete</button>
+            <button class="btn-qb-edit" onclick="sbShowEditForm('${sent.id}')">✏️ Edit</button>
+            <button class="btn-qb-delete" onclick="sbDeleteQuestion('${sent.id}')">🗑 Delete</button>
           </div>` : `
           <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9">
-            <button class="btn btn-ghost" style="font-size:0.72rem;color:#94a3b8" onclick="sbHideBuiltin(${JSON.stringify(sent.id)})">✕ Hide</button>
+            <button class="btn btn-ghost" style="font-size:0.72rem;color:#94a3b8" onclick="sbHideBuiltin(${JSON.stringify(sent.id)})">✕ Hide this question</button>
           </div>`;
+
+        const hiddenCount = (state.hiddenQBIds || []).length;
 
         root.innerHTML = `
           <div class="sb-nav-row">
             <button class="btn btn-gray" onclick="sbPrev()" ${_sbIdx===0?'disabled':''}>‹ Prev</button>
             <span class="study-counter">${_sbIdx+1} / ${queue.length}</span>
             <button class="btn btn-gray" onclick="sbNext()" ${_sbIdx===queue.length-1?'disabled':''}>Next ›</button>
-            <button class="btn btn-green" style="margin-left:auto;font-size:0.78rem" onclick="sbShowAddForm()">➕ Add Question</button>
+            <div style="margin-left:auto;display:flex;gap:6px;flex-wrap:wrap">
+              ${hiddenCount ? `<button class="btn btn-ghost" style="font-size:0.76rem;color:#d97706;border-color:#fde68a" onclick="sbShowRestorePanel()">↩ Restore Hidden (${hiddenCount})</button>` : ''}
+              <button class="btn btn-green" style="font-size:0.78rem" onclick="sbShowAddForm()">➕ Add Question</button>
+            </div>
           </div>
 
           <div class="sb-cat-row">${catBtns}</div>
@@ -214,6 +219,53 @@
         state.hiddenQBIds = [...new Set([...(state.hiddenQBIds || []), id])];
         saveState();
         if (_sbIdx >= _sbQueue().length) _sbIdx = Math.max(0, _sbQueue().length - 1);
+        renderQuestionBank();
+      }
+
+      function sbShowRestorePanel() {
+        const root = document.getElementById('sb-root');
+        if (!root) return;
+        const hiddenIds = state.hiddenQBIds || [];
+        if (!hiddenIds.length) return;
+        const hiddenQs = (typeof SENTENCES_B1 !== 'undefined' ? SENTENCES_B1 : [])
+          .filter(s => hiddenIds.includes(s.id));
+
+        const old = document.getElementById('sb-restore-panel');
+        if (old) { old.remove(); return; } // toggle
+
+        const panel = document.createElement('div');
+        panel.id = 'sb-restore-panel';
+        panel.className = 'card sb-restore-panel';
+        panel.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <span style="font-weight:700;font-size:0.95rem">↩ Hidden Questions</span>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-ghost" style="font-size:0.76rem" onclick="sbRestoreAll()">Restore All</button>
+              <button class="btn btn-gray"  style="font-size:0.76rem" onclick="document.getElementById('sb-restore-panel').remove()">✕ Close</button>
+            </div>
+          </div>
+          ${hiddenQs.map(q => `
+            <div class="sb-restore-row">
+              <span class="cat-badge cat-${q.cat}" style="font-size:0.65rem;flex-shrink:0">${catLabel(q.cat)}</span>
+              <span style="flex:1;font-size:0.83rem;color:#374151">${escapeHtml(q.q)}</span>
+              <button class="btn btn-ghost" style="font-size:0.74rem;flex-shrink:0" onclick="sbRestoreOne(${JSON.stringify(q.id)})">↩ Restore</button>
+            </div>`).join('')}`;
+        root.insertAdjacentElement('afterbegin', panel);
+      }
+
+      function sbRestoreOne(id) {
+        state.hiddenQBIds = (state.hiddenQBIds || []).filter(h => h !== id);
+        saveState();
+        const panel = document.getElementById('sb-restore-panel');
+        if (panel) panel.remove();
+        renderQuestionBank();
+      }
+
+      function sbRestoreAll() {
+        state.hiddenQBIds = [];
+        saveState();
+        const panel = document.getElementById('sb-restore-panel');
+        if (panel) panel.remove();
         renderQuestionBank();
       }
 
