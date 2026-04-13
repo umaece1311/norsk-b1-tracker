@@ -3,16 +3,9 @@
 
       const _cvState = {}; // key = "qId_safeWord" → { rec, mediaRec, stream, transcript }
 
-      function toggleCardVocab(qId) {
-        const panel = document.getElementById('card-vocab-' + qId);
-        if (!panel) return;
-        if (panel.classList.contains('hidden')) {
-          panel.classList.remove('hidden');
-          renderCardVocab(qId);
-        } else {
-          panel.classList.add('hidden');
-        }
-      }
+      // toggleCardVocab is no longer used — vocab now auto-renders inside the
+      // Pronunciation panel when it opens. Kept as a no-op for safety.
+      function toggleCardVocab(qId) { /* no-op */ }
 
       function _cardVocabWords(q) {
         // Only the user's own written answer for this question

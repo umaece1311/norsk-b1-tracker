@@ -1,5 +1,5 @@
       // ═══════════════════════════════════════════════════════════════════════════════
-      // ─── STUDY MODE — Sentence Bank only ──────────────────────────────────────────
+      // ─── STUDY MODE — Question Bank ───────────────────────────────────────────────
       // ═══════════════════════════════════════════════════════════════════════════════
 
       // ── Main render ───────────────────────────────────────────────────────────────
@@ -7,61 +7,78 @@
         const root = document.getElementById('study-page-root');
         if (!root) return;
         root.innerHTML = '<div id="sb-root"></div>';
-        renderSentenceBank();
+        renderQuestionBank();
       }
 
       // ══════════════════════════════════════════════════════════════════════════════
-      // ── SENTENCE BANK ─────────────────────────────────────────────────────────────
-      // Browse + practice 200 standalone B1+ Norwegian sentences.
+      // ── QUESTION BANK ─────────────────────────────────────────────────────────────
+      // Browse + practice B1+ Norwegian sentences. Supports add/edit/delete custom
+      // questions and hiding built-in ones.
       // ══════════════════════════════════════════════════════════════════════════════
 
       let _sbIdx    = 0;
       let _sbCat    = 'all';
-      let _sbRec    = {};   // recording state for sentence bank
+      let _sbRec    = {};   // recording state for question bank
 
       function _sbQueue() {
         if (typeof SENTENCES_B1 === 'undefined') return [];
-        if (_sbCat === 'all') return SENTENCES_B1;
-        return SENTENCES_B1.filter(s => s.cat === _sbCat);
+        const hidden = new Set(state.hiddenQBIds || []);
+        const base   = SENTENCES_B1.filter(s => !hidden.has(s.id));
+        const custom = (state.customQuestions || []);
+        const all    = [...base, ...custom];
+        return _sbCat === 'all' ? all : all.filter(s => s.cat === _sbCat);
       }
 
       function setSbCat(cat) {
         _sbCat = cat;
         _sbIdx = 0;
-        renderSentenceBank();
+        renderQuestionBank();
       }
 
-      function sbPrev() { if (_sbIdx > 0)                    { _sbIdx--; renderSentenceBank(); } }
-      function sbNext() { if (_sbIdx < _sbQueue().length - 1) { _sbIdx++; renderSentenceBank(); } }
+      function sbPrev() { if (_sbIdx > 0)                    { _sbIdx--; renderQuestionBank(); } }
+      function sbNext() { if (_sbIdx < _sbQueue().length - 1) { _sbIdx++; renderQuestionBank(); } }
 
-      function renderSentenceBank() {
+      function renderQuestionBank() {
         const root = document.getElementById('sb-root');
         if (!root) return;
 
         const queue = _sbQueue();
         if (!queue.length) {
-          root.innerHTML = `<p style="text-align:center;color:#94a3b8;padding:40px">No sentences found.</p>`;
+          root.innerHTML = `<p style="text-align:center;color:#94a3b8;padding:40px">No questions found.</p>`;
           return;
         }
         if (_sbIdx >= queue.length) _sbIdx = queue.length - 1;
 
         const sent = queue[_sbIdx];
+        const disabled = queue.length <= 1 ? 'disabled' : '';
 
         const catBtns = [{ id: 'all', label: 'All', emoji: '🌐' }, ...CATS].map(c => {
           const id    = c.id || 'all';
           const label = c.label || 'All';
           const emoji = c.emoji || '🌐';
-          const count = id === 'all'
-            ? (typeof SENTENCES_B1 !== 'undefined' ? SENTENCES_B1.length : 0)
-            : (typeof SENTENCES_B1 !== 'undefined' ? SENTENCES_B1.filter(s => s.cat === id).length : 0);
+          const hidden = new Set(state.hiddenQBIds || []);
+          const base   = typeof SENTENCES_B1 !== 'undefined' ? SENTENCES_B1.filter(s => !hidden.has(s.id)) : [];
+          const custom = (state.customQuestions || []);
+          const all    = [...base, ...custom];
+          const count  = id === 'all' ? all.length : all.filter(s => s.cat === id).length;
           return `<button class="filter-chip${_sbCat===id?' active':''}" onclick="setSbCat('${id}')">${emoji} ${label} <span style="font-size:0.7em;opacity:0.7">${count}</span></button>`;
         }).join('');
+
+        const customActions = sent.custom ? `
+          <div class="sb-custom-actions">
+            <button class="btn btn-ghost" style="font-size:0.76rem" onclick="sbShowEditForm('${sent.id}')">✏️ Edit</button>
+            <button class="btn btn-danger" style="font-size:0.76rem" onclick="sbDeleteQuestion('${sent.id}')">🗑 Delete</button>
+          </div>` : `
+          <div style="margin-top:8px;padding-top:8px;border-top:1px solid #f1f5f9">
+            <button class="btn btn-ghost" style="font-size:0.72rem;color:#94a3b8" onclick="sbHideBuiltin(${JSON.stringify(sent.id)})">✕ Hide</button>
+          </div>`;
 
         root.innerHTML = `
           <div class="sb-nav-row">
             <button class="btn btn-gray" onclick="sbPrev()" ${_sbIdx===0?'disabled':''}>‹ Prev</button>
             <span class="study-counter">${_sbIdx+1} / ${queue.length}</span>
             <button class="btn btn-gray" onclick="sbNext()" ${_sbIdx===queue.length-1?'disabled':''}>Next ›</button>
+            <button class="btn btn-green" style="margin-left:auto;font-size:0.78rem" onclick="sbShowAddForm()">➕ Add Question</button>
           </div>
 
           <div class="sb-cat-row">${catBtns}</div>
@@ -73,7 +90,8 @@
                 <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap">
                   <span class="cat-badge ${catClass(sent.cat)}">${catLabel(sent.cat)}</span>
                   <span class="q-num">#${_sbIdx+1}</span>
-                  <span class="sb-qen-badge">${sent.qEn}</span>
+                  ${sent.qEn ? `<span class="sb-qen-badge">${sent.qEn}</span>` : ''}
+                  ${sent.custom ? `<span style="font-size:0.7rem;background:#ede9fe;color:#5b21b6;padding:2px 8px;border-radius:10px;font-weight:600">Custom</span>` : ''}
                 </div>
                 <div class="q-text">${sent.q}</div>
               </div>
@@ -90,23 +108,118 @@
                 <span>📖</span> <span>Sample Answer</span> <span style="margin-left:auto;font-size:1rem">▼</span>
               </div>
               <div class="pdf-answer-content hidden">
-                <div style="margin-bottom:6px">${sent.no}</div>
-                <div style="font-size:0.82rem;color:#2563eb;font-style:italic">${sent.en}</div>
-                <button class="btn btn-ghost" style="font-size:0.76rem;margin-top:8px" onclick="sbSpeak(${sent.id})">🔊 Hear Sample Answer</button>
+                <div style="margin-bottom:6px">${sent.no || ''}</div>
+                <div style="font-size:0.82rem;color:#2563eb;font-style:italic">${sent.en || ''}</div>
+                <button class="btn btn-ghost" style="font-size:0.76rem;margin-top:8px" onclick="sbSpeak(${JSON.stringify(sent.id)})">🔊 Hear Sample Answer</button>
               </div>
             </div>
 
             <!-- Action row -->
             <div class="action-row">
-              <button class="btn btn-ghost"  onclick="sbSpeakQuestion(${sent.id})">🔊 Question</button>
-              <button class="btn btn-green"  id="sb-rec-${sent.id}"  onclick="sbRecord(${sent.id})">🎤 Record Answer</button>
-              <button class="btn btn-danger hidden" id="sb-stop-${sent.id}" onclick="sbStop(${sent.id})">⏹ Stop</button>
+              <button class="btn btn-ghost"  onclick="sbSpeakQuestion(${JSON.stringify(sent.id)})">🔊 Question</button>
+              <button class="btn btn-green"  id="sb-rec-${sent.id}"  onclick="sbRecord(${JSON.stringify(sent.id)})">🎤 Record Answer</button>
+              <button class="btn btn-danger hidden" id="sb-stop-${sent.id}" onclick="sbStop(${JSON.stringify(sent.id)})">⏹ Stop</button>
             </div>
 
             <div class="st-prac-status" id="sb-status-${sent.id}"></div>
             <div id="sb-result-${sent.id}"></div>
+
+            ${customActions}
           </div>`;
       }
+
+      // ── Add/Edit Form ─────────────────────────────────────────────────────────────
+
+      function sbShowAddForm() {
+        const root = document.getElementById('sb-root');
+        if (!root) return;
+        const formHtml = _sbFormHtml(null, null);
+        root.insertAdjacentHTML('afterbegin', formHtml);
+      }
+
+      function sbShowEditForm(id) {
+        const root = document.getElementById('sb-root');
+        if (!root) return;
+        const existing = (state.customQuestions || []).find(q => q.id === id);
+        if (!existing) return;
+        // Remove any existing form first
+        const old = document.getElementById('sb-form');
+        if (old) old.remove();
+        const formHtml = _sbFormHtml(id, existing);
+        root.insertAdjacentHTML('afterbegin', formHtml);
+      }
+
+      function _sbFormHtml(id, existing) {
+        const isEdit = !!id;
+        const catOptions = [{ id: 'all', label: 'All', emoji: '🌐' }, ...CATS]
+          .filter(c => c.id !== 'all')
+          .map(c => `<option value="${c.id}" ${existing?.cat === c.id ? 'selected' : ''}>${c.emoji} ${c.label}</option>`)
+          .join('');
+        return `
+        <div class="card sb-edit-form" id="sb-form">
+          <div style="font-weight:700;margin-bottom:12px;font-size:1rem">${isEdit ? '✏️ Edit Question' : '➕ New Question'}</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <label style="font-size:0.8rem;font-weight:600">Category</label>
+            <select id="sbf-cat" class="answer-area" style="height:auto;padding:8px">
+              ${catOptions}
+            </select>
+            <label style="font-size:0.8rem;font-weight:600">Question (Norwegian)</label>
+            <input id="sbf-q" class="answer-area" style="height:auto;padding:8px" value="${escapeHtml(existing?.q || '')}">
+            <label style="font-size:0.8rem;font-weight:600">Question (English hint)</label>
+            <input id="sbf-qen" class="answer-area" style="height:auto;padding:8px" value="${escapeHtml(existing?.qEn || '')}">
+            <label style="font-size:0.8rem;font-weight:600">Sample Answer (Norwegian)</label>
+            <textarea id="sbf-no" class="answer-area" rows="3">${escapeHtml(existing?.no || '')}</textarea>
+            <label style="font-size:0.8rem;font-weight:600">Sample Answer (English)</label>
+            <textarea id="sbf-en" class="answer-area" rows="2">${escapeHtml(existing?.en || '')}</textarea>
+          </div>
+          <div class="action-row" style="margin-top:14px">
+            <button class="btn btn-primary" onclick="sbSaveForm(${isEdit ? `'${id}'` : 'null'})">💾 Save</button>
+            <button class="btn btn-gray" onclick="sbCancelForm()">Cancel</button>
+          </div>
+        </div>`;
+      }
+
+      function sbSaveForm(id) {
+        const cat  = document.getElementById('sbf-cat')?.value?.trim() || '';
+        const q    = document.getElementById('sbf-q')?.value?.trim() || '';
+        const qEn  = document.getElementById('sbf-qen')?.value?.trim() || '';
+        const no   = document.getElementById('sbf-no')?.value?.trim() || '';
+        const en   = document.getElementById('sbf-en')?.value?.trim() || '';
+
+        if (!q) { alert('Please enter a question in Norwegian.'); return; }
+
+        if (id === null || id === 'null') {
+          // Add new
+          const newQ = { id: 'cq-' + Date.now(), cat, q, qEn, no, en, custom: true };
+          state.customQuestions = [...(state.customQuestions || []), newQ];
+        } else {
+          // Edit existing
+          state.customQuestions = (state.customQuestions || []).map(cq =>
+            cq.id === id ? { ...cq, cat, q, qEn, no, en } : cq
+          );
+        }
+        saveState();
+        renderQuestionBank();
+      }
+
+      function sbDeleteQuestion(id) {
+        if (!confirm('Delete this question?')) return;
+        state.customQuestions = (state.customQuestions || []).filter(q => q.id !== id);
+        saveState();
+        if (_sbIdx >= _sbQueue().length) _sbIdx = Math.max(0, _sbQueue().length - 1);
+        renderQuestionBank();
+      }
+
+      function sbHideBuiltin(id) {
+        state.hiddenQBIds = [...new Set([...(state.hiddenQBIds || []), id])];
+        saveState();
+        if (_sbIdx >= _sbQueue().length) _sbIdx = Math.max(0, _sbQueue().length - 1);
+        renderQuestionBank();
+      }
+
+      function sbCancelForm() { renderQuestionBank(); }
+
+      // ── Speech helpers ────────────────────────────────────────────────────────────
 
       function _sbSpeakText(text) {
         window.speechSynthesis.cancel();
@@ -120,17 +233,20 @@
       }
 
       function sbSpeak(id) {
-        const s = (typeof SENTENCES_B1 !== 'undefined') ? SENTENCES_B1.find(s => s.id === id) : null;
-        if (s) _sbSpeakText(s.no);
+        const all = [...(typeof SENTENCES_B1 !== 'undefined' ? SENTENCES_B1 : []), ...(state.customQuestions || [])];
+        const s = all.find(s => s.id === id);
+        if (s && s.no) _sbSpeakText(s.no);
       }
 
       function sbSpeakQuestion(id) {
-        const s = (typeof SENTENCES_B1 !== 'undefined') ? SENTENCES_B1.find(s => s.id === id) : null;
+        const all = [...(typeof SENTENCES_B1 !== 'undefined' ? SENTENCES_B1 : []), ...(state.customQuestions || [])];
+        const s = all.find(s => s.id === id);
         if (s) _sbSpeakText(s.q);
       }
 
       async function sbRecord(id) {
-        const s = (typeof SENTENCES_B1 !== 'undefined') ? SENTENCES_B1.find(s => s.id === id) : null;
+        const all = [...(typeof SENTENCES_B1 !== 'undefined' ? SENTENCES_B1 : []), ...(state.customQuestions || [])];
+        const s = all.find(s => s.id === id);
         if (!s) return;
 
         let stream;
@@ -312,8 +428,8 @@
             ${gram.tips.map(t => `<div class="sb-gram-tip">💡 ${t}</div>`).join('')}
           </div>
           <div class="action-row" style="margin-top:10px">
-            <button class="btn btn-ghost"  onclick="sbSpeak(${id})">🔊 Sample Answer</button>
-            <button class="btn btn-green"  onclick="sbRecord(${id})">🔁 Try Again</button>
+            <button class="btn btn-ghost"  onclick="sbSpeak(${JSON.stringify(id)})">🔊 Sample Answer</button>
+            <button class="btn btn-green"  onclick="sbRecord(${JSON.stringify(id)})">🔁 Try Again</button>
             <button class="btn btn-indigo" onclick="sbNext()">Next →</button>
           </div>`;
 

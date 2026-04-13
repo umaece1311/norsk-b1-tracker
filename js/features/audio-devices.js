@@ -12,6 +12,7 @@
       // to enumerate devices if permission was already granted previously.
       function initAudioDevices() {
         if (!navigator.mediaDevices) return;
+        _selectedMicId = localStorage.getItem('norsk_micId') || null;
         navigator.mediaDevices.addEventListener('devicechange', () => {
           _enumerateAndPopulate(true);
         });
@@ -105,6 +106,7 @@
       // Called when a pronMicSelect dropdown changes — syncs all other selects too
       function syncAllMicSelects(val) {
         _selectedMicId = val || null;
+        localStorage.setItem('norsk_micId', val || '');
         document.getElementById('micSelect') && (document.getElementById('micSelect').value = val);
         document.querySelectorAll('select[id^="pronMicSelect-"]').forEach(sel => {
           sel.value = val;
@@ -122,6 +124,7 @@
 
       function onMicChange(val) {
         _selectedMicId = val || null;
+        localStorage.setItem('norsk_micId', val || '');
       }
 
       function onSpeakerChange(val) {

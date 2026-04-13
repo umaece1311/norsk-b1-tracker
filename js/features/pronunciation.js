@@ -76,6 +76,7 @@
         // Auto-scan devices when box is opened so Bluetooth headset appears immediately
         if (!box.classList.contains('hidden')) {
           populatePronMic(id);
+          renderCardVocab(id);
         }
       }
 
