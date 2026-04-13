@@ -1356,6 +1356,47 @@
       }
       .btn-qb-delete:hover { background: #fee2e2; }
 
+      /* ── Question Bank custom list ── */
+      .sb-custom-list-section {
+        margin-top: 16px;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #fff;
+      }
+      .sb-custom-list-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 16px;
+        background: #f8fafc;
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #1a2235;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      .sb-custom-list-count {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #64748b;
+      }
+      .sb-custom-empty {
+        padding: 16px;
+        color: #94a3b8;
+        font-size: 0.83rem;
+        text-align: center;
+        margin: 0;
+      }
+      .sb-custom-list-section .custom-q-row {
+        border-radius: 0;
+        border: none;
+        border-bottom: 1px solid #f1f5f9;
+        padding: 10px 16px;
+      }
+      .sb-custom-list-section .custom-q-row:last-child {
+        border-bottom: none;
+      }
+
       /* ── Restore hidden panel ── */
       .sb-restore-panel {
         border: 2px solid #fde68a;

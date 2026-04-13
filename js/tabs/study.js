@@ -130,6 +130,34 @@
             <div id="sb-result-${sent.id}"></div>
 
             ${customActions}
+          </div>
+
+          ${_sbCustomListHtml()}`;
+      }
+
+      // ── My Custom Questions list ──────────────────────────────────────────────────
+      function _sbCustomListHtml() {
+        const customs = (state.customQuestions || []);
+        return `
+          <div class="sb-custom-list-section">
+            <div class="sb-custom-list-header">
+              <span>📋 My Custom Questions</span>
+              <span class="sb-custom-list-count">${customs.length} question${customs.length !== 1 ? 's' : ''}</span>
+            </div>
+            ${!customs.length
+              ? `<p class="sb-custom-empty">No custom questions yet — click ➕ Add Question to create one.</p>`
+              : customs.map(q => `
+                <div class="custom-q-row">
+                  <div class="custom-q-info">
+                    <span class="cat-badge cat-${q.cat}" style="font-size:0.65rem;flex-shrink:0">${catLabel(q.cat)}</span>
+                    <span class="custom-q-text">${escapeHtml(q.q)}</span>
+                  </div>
+                  <div class="custom-q-actions">
+                    <button class="btn-cq-edit" onclick="sbShowEditForm('${q.id}')">✏️ Edit</button>
+                    <button class="btn-cq-delete" onclick="sbDeleteQuestion('${q.id}')">🗑 Delete</button>
+                  </div>
+                </div>`).join('')
+            }
           </div>`;
       }
 
