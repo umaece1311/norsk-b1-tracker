@@ -56,7 +56,7 @@
           cat: 'about-me',
           examType: 'A',
           q: 'Hva er dine styrker og svakheter?',
-          a: 'Jeg synes sosiale medier er både bra og dårlig. Det er fint fordi man kan holde kontakt med familie og venner, spesielt hvis de bor langt unna. Man kan også lære mye nytt og følge med på nyheter. Men det verste er TikTok og Instagram, hvor folk, spesielt ungdommer, bruker masse tid på ting som ikke er nyttige. Mange blir avhengige og glemmer viktige ting i livet. Jeg tror det er viktig å ha en balanse og ikke bruke for mye tid på mobilen.',
+          a: 'En av styrkene mine er at jeg er hardtarbeidende og lærer raskt. Jeg prøver alltid å gjøre mitt beste, og jeg gir ikke opp lett. Jeg er også god til å lytte og hjelpe andre. En svakhet er at jeg noen ganger er for perfeksjonistisk. Jeg bruker mye tid på å gjøre ting riktig, og det kan ta lenger tid. Men jeg jobber med å bli bedre på det.',
         },
         {
           id: 7,
@@ -70,14 +70,14 @@
           cat: 'about-me',
           examType: 'A',
           q: 'Hva er du stolt av i livet ditt?',
-          a: 'Jeg savner familien min mest! Det er ikke så lett å bo langt unna dem. Jeg savner også maten, fordi vi har mange spesielle retter som jeg ikke finner her. Været er også annerledes – hjemme er det varmere og mer sol. Men heldigvis kan jeg reise på besøk av og til.',
+          a: 'Jeg er stolt av at jeg har klart å bygge et nytt liv i Norge. Det har ikke vært lett å lære et nytt språk og tilpasse seg en ny kultur, men jeg har ikke gitt opp. Jeg er også stolt av barna mine og alt de har oppnådd. De gjør meg glad hver dag. Jeg er stolt av at jeg prøver å bli bedre hele tiden.',
         },
         {
           id: 9,
           cat: 'family',
           examType: 'A',
           q: 'Kan du fortelle om familien din?',
-          a: 'Klassen min er hyggelig. Vi er fra forskjellige land. Noen er fra Ukraina, og noen er fra Syria. Det er både menn og kvinner i klassen, men de fleste er kvinner. Noen har bodd lenge i Norge, og noen har kommet nylig. Vi lærer norsk sammen. Vi hjelper hverandre og snakker i pausene. Læreren er snill og forklarer bra. Jeg liker klassen fordi jeg lærer mye og får nye venner.',
+          a: 'Jeg er gift og har to barn. Mannen min jobber, og jeg går på norskkurs. Barna våre går på barneskolen her i Norge. Vi bor i en leilighet i nærheten av skolen. Foreldrene mine bor i hjemlandet, og vi savner dem. Vi ringer til dem en gang i uken. Familien er veldig viktig for meg.',
         },
         {
           id: 10,
@@ -105,21 +105,21 @@
           cat: 'family',
           examType: 'C',
           q: 'Synes du det er viktig å bo nær familien sin?',
-          a: 'Ja, jeg synes det er viktig å spise sunn mat. Sunn mat gir oss energi og gjør oss sterke. Jeg prøver å spise mye grønnsaker, frukt og proteiner som kjøtt eller fisk. Jeg prøver også å drikke nok vann og ikke spise for mye sukker. Hvis man spiser sunn mat, føler man seg bedre og har mer energi i hverdagen.',
+          a: 'Ja, jeg synes det er viktig å bo nær familien. Når man bor nær hverandre, er det lettere å hjelpe hverandre i hverdagen. Man kan møtes til middag eller hjelpe med barnepass. Men jeg forstår at det ikke alltid er mulig, spesielt hvis man kommer fra et annet land. Heldigvis kan man holde kontakt på video også.',
         },
         {
           id: 14,
           cat: 'family',
           examType: 'C',
           q: 'Hva er fordelene og ulempene med å ha en stor familie?',
-          a: 'Jeg har lyst til å reise til Spania. Der er det varmt og fint. Jeg liker sol og strand. Jeg vil også smake på spansk mat. Paella og tapas ser veldig godt ut. Kanskje jeg kan lære litt spansk også. Jeg håper jeg kan reise dit en dag.',
+          a: 'En stor familie har mange fordeler. Det er alltid noen å snakke med, og man får hjelp når man trenger det. Barn som vokser opp med søsken lærer å dele og samarbeide. Men det kan også være travelt og dyrt med mange i familien. Noen ganger er det vanskelig å få ro og privatliv. Alt i alt synes jeg en stor familie er veldig fin.',
         },
         {
           id: 15,
           cat: 'family',
           examType: 'A',
           q: 'Hva betyr familie for deg?',
-          a: 'Det viktigste for meg er å like jobben og ha hyggelige kollegaer. Jeg vil også lære noe nytt og utvikle meg. Det er en fordel hvis jobben er godt betalt og ikke for langt unna der jeg bor. Jeg liker å ha klare arbeidsoppgaver og føle at jeg gjør en god jobb. Når disse tingene er på plass, trives jeg på jobben.',
+          a: 'Familie betyr veldig mye for meg. Det er menneskene jeg er glad i mest. Når jeg har det vanskelig, er familien der for meg. Vi hjelper hverandre og støtter hverandre. Jeg synes det er viktig å bruke tid sammen, for eksempel å spise middag eller gå på tur. Uten familien hadde livet vært mye ensommere.',
         },
         {
           id: 16,
@@ -140,7 +140,7 @@
           cat: 'family',
           examType: 'A',
           q: 'Kan du fortelle om en høytid du liker? Når på året er den? Hvilken mat spiser dere?',
-          a: 'Jeg liker jul. Jul feires i desember, og mange i Norge feiler den sammen med familie. Folk pynter huset og tenner lys. På julaften spiser man god mat, for eksempel ribbe, pinnekjøtt eller kalkun. Mange gir gaver til hverandre. Det er en koselig tid med familie, mat og glede. Jeg liker Eid. Det er en av de viktigste høytidene for muslimer. Vi feirer den etter Ramadan. På morgenen går vi i moskeen og ber. Etterpå besøker vi familie og venner. Vi spiser mye god mat, for eksempel kjøttretter, ris og søtsaker. Barna får ofte gaver eller penger. Det er en dag med glede og feiring. o',
+          a: 'Jeg liker jul. Jul feires i desember, og mange i Norge feirer den sammen med familie. Folk pynter huset og tenner lys. På julaften spiser man god mat, for eksempel ribbe, pinnekjøtt eller kalkun. Mange gir gaver til hverandre. Det er en koselig tid med familie, mat og glede. Jeg liker Eid. Det er en av de viktigste høytidene for muslimer. Vi feirer den etter Ramadan. På morgenen går vi i moskeen og ber. Etterpå besøker vi familie og venner. Vi spiser mye god mat, for eksempel kjøttretter, ris og søtsaker. Barna får ofte gaver eller penger. Det er en dag med glede og feiring.',
         },
         {
           id: 17,
@@ -154,7 +154,7 @@
           cat: 'work',
           examType: 'A',
           q: 'Kan du beskrive en typisk arbeidsdag?',
-          a: 'I mitt hjemland bor mange familier sammen. Ofte bor foreldre og barn i samme hus. Noen ganger bor også besteforeldre sammen med familien. Det er vanlig at mor og far jobber, og barna går på skole. Familien spiser middag sammen og hjelper hverandre i hverdagen. Familie er veldig viktig i min kultur.',
+          a: 'En typisk arbeidsdag begynner tidlig om morgenen. Jeg står opp, spiser frokost og drar til jobben. På jobben har jeg ulike oppgaver jeg må gjøre. Vi har gjerne et møte om morgenen for å snakke om dagens plan. Jeg spiser lunsj med kollegene. Etter jobb drar jeg hjem, lager middag og slapper av. Jeg prøver å legge meg tidlig så jeg er uthvilt neste dag.',
         },
         {
           id: 19,
@@ -168,14 +168,14 @@
           cat: 'work',
           examType: 'C',
           q: 'Er det viktig å ha en jobb man liker?',
-          a: 'Det viktigste for meg er å like jobben og ha hyggelige kollegaer. Jeg vil også lære noe nytt og utvikle meg. Det er en fordel hvis jobben er godt betalt og ikke for langt unna der jeg bor. Jeg liker å ha klare arbeidsoppgaver og føle at jeg gjør en god jobb. Når disse tingene er på plass, trives jeg på jobben.',
+          a: 'Ja, jeg synes det er veldig viktig å ha en jobb man liker. Hvis man trives på jobb, jobber man bedre og er gladere. Man bruker mye tid på jobben, så det er viktig at den føles meningsfull. Jeg tror en jobb man liker gir mer energi og motivasjon. Selvfølgelig er lønn og stabilitet også viktig, men trivsel er minst like viktig for meg.',
         },
         {
           id: 21,
           cat: 'work',
           examType: 'C',
           q: 'Hva er utfordringene ved å jobbe i Norge som innvandrer?',
-          a: 'Jeg synes det er bra at Norge hjelper flyktninger som trenger beskyttelse. Mange kommer fra krig og vanskelige situasjoner, og de trenger et trygt sted å bo. Samtidig kan det være utfordrende å tilpasse seg et nytt land med et nytt språk. Jeg tror det er viktig at innvandrere lærer norsk og blir en del av samfunnet. Hvis alle bidrar og respekterer hverandre, blir det bedre for både nordmenn og innvandrere.',
+          a: 'Den største utfordringen er språket. Det er vanskelig å kommunisere godt på norsk i starten. Noen arbeidsgivere foretrekker å ansette folk som snakker norsk flytende. En annen utfordring er at jeg ikke alltid kjenner de norske arbeidsreglene og vanene. Men jeg prøver å lære og tilpasse meg. Jeg tror det blir lettere jo lenger man bor her og jo flinkere man blir i norsk.',
         },
         {
           id: 22,
@@ -189,7 +189,7 @@
           cat: 'work',
           examType: 'C',
           q: 'Hva er positivt og negativt med å jobbe hjemmefra?',
-          a: 'Det viktigste for meg er å like jobben og ha hyggelige kollegaer. Jeg vil også lære noe nytt og utvikle meg. Det er en fordel hvis jobben er godt betalt og ikke for langt unna der jeg bor. Jeg liker å ha klare arbeidsoppgaver og føle at jeg gjør en god jobb. Når disse tingene er på plass, trives jeg på jobben.',
+          a: 'Det positive med å jobbe hjemmefra er at man sparer tid og penger på reise. Man kan jobbe i ro og organisere dagen selv. Men det negative er at man kan bli ensom og savne kollegaene. Det kan også være vanskelig å skille jobb og fritid når man er hjemme. Jeg synes det er best med en kombinasjon – noen dager hjemme og noen dager på kontoret.',
         },
         {
           id: 24,
@@ -210,7 +210,7 @@
           cat: 'school',
           examType: 'A',
           q: 'Har du tatt noe utdanning i Norge?',
-          a: 'Jeg synes integrering er veldig viktig for å kunne leve et godt liv i Norge. Det handler om å lære språket, forstå kulturen og delta i samfunnet. Det er viktig å respektere norske verdier og tradisjoner. Men jeg mener også at det norske samfunnet må være åpent og inkluderende. Integrering er en toveisprosess.',
+          a: 'Ja, jeg har gått på norskkurs siden jeg kom til Norge. Det er viktig for meg å lære språket godt. Jeg har også tatt noen kurs for å lære mer om norsk arbeidsliv og samfunn. I hjemlandet mitt tok jeg utdanning innen økonomi. Jeg håper å kunne bruke utdanningen min her i Norge en dag.',
         },
         {
           id: 26,
@@ -224,7 +224,7 @@
           cat: 'school',
           examType: 'A',
           q: 'Synes du det er lett eller vanskelig å lære norsk?',
-          a: 'Ja, jeg synes det er viktig å spise sunn mat. Sunn mat gir oss energi og gjør oss sterke. Jeg prøver å spise mye grønnsaker, frukt og proteiner som kjøtt eller fisk. Jeg prøver også å drikke nok vann og ikke spise for mye sukker. Hvis man spiser sunn mat, føler man seg bedre og har mer energi i hverdagen.',
+          a: 'Jeg synes det er litt vanskelig å lære norsk, men det går fremover. Grammatikken kan være forvirrende, spesielt med alle ordklassene og bøyningene. Uttalen er også krevende noen ganger. Men det som hjelper meg mest er å snakke norsk med folk i hverdagen. Jo mer jeg øver, jo lettere blir det. Jeg er glad for at nordmenn er tålmodige med meg.',
         },
         {
           id: 28,
@@ -238,7 +238,7 @@
           cat: 'school',
           examType: 'C',
           q: 'Er utdanning viktig for å lykkes i livet?',
-          a: 'Trening er viktig for helsen fordi det gir oss mer energi og gjør kroppen sterkere. Hvis man trener regelmessig, blir man sunnere og føler seg bedre. Trening hjelper også mot stress og gjør at man sover bedre. Man trenger ikke å trene hardt, men det er bra å gå tur, sykle eller gjøre enkle øvelser hver dag.',
+          a: 'Ja, jeg tror utdanning er veldig viktig for å lykkes i livet. Med utdanning får man flere muligheter og bedre jobber. Man lærer å tenke kritisk og løse problemer. Men jeg tror også at erfaring og vilje til å jobbe hardt er viktig. Noen mennesker lykkes uten lang utdanning, men utdanning gir en god start. Jeg synes alle bør ha mulighet til å ta utdanning.',
         },
         {
           id: 30,
@@ -308,7 +308,7 @@
           cat: 'health',
           examType: 'A',
           q: 'Hva er viktigst for å leve et sunt liv?',
-          a: 'Det viktigste for meg er å like jobben og ha hyggelige kollegaer. Jeg vil også lære noe nytt og utvikle meg. Det er en fordel hvis jobben er godt betalt og ikke for langt unna der jeg bor. Jeg liker å ha klare arbeidsoppgaver og føle at jeg gjør en god jobb. Når disse tingene er på plass, trives jeg på jobben.',
+          a: 'For å leve et sunt liv er det viktig å spise sunn mat, trene regelmessig og sove nok. Jeg prøver å spise grønnsaker, frukt og unngå for mye sukker. Det er også viktig å ta vare på den mentale helsen. Å ha gode relasjoner med familie og venner gjør livet bedre. Jeg tror balansen mellom kropp og sinn er nøkkelen til et sunt og godt liv.',
         },
         {
           id: 40,
@@ -357,7 +357,7 @@
           cat: 'daily',
           examType: 'A',
           q: 'Hva spiser du til frokost, lunsj og middag?',
-          a: 'Jeg savner familien min mest! Det er ikke så lett å bo langt unna dem. Jeg savner også maten, fordi vi har mange spesielle retter som jeg ikke finner her. Været er også annerledes – hjemme er det varmere og mer sol. Men heldigvis kan jeg reise på besøk av og til.',
+          a: 'Til frokost spiser jeg ofte brød med pålegg og drikker kaffe eller te. Til lunsj tar jeg gjerne med matpakke fra hjemmet, for eksempel smørbrød eller rester fra middagen. Til middag lager jeg varm mat, ofte kjøtt eller kylling med grønnsaker og ris. Noen ganger lager jeg mat fra hjemlandet mitt. Jeg prøver å spise sunt og variert.',
         },
         {
           id: 48,
@@ -371,7 +371,7 @@
           cat: 'daily',
           examType: 'C',
           q: 'Er det viktig å ha rutiner i hverdagen?',
-          a: 'Jeg synes internett er den viktigste oppfinnelsen. Vi bruker det til nesten alt – jobbing, læring og kontakt med andre. Uten internett hadde det vært vanskelig å finne informasjon og holde kontakt med familien. Det gjør livet lettere og mer spennende. Jeg kan ikke forestille meg en verden uten internett.',
+          a: 'Ja, jeg synes det er viktig å ha rutiner i hverdagen. Rutiner gjør at dagen blir mer organisert og forutsigbar. Når jeg vet hva jeg skal gjøre, bruker jeg mindre tid på å bestemme og mer tid på å gjøre ting. Rutiner hjelper meg også å sove bedre og ha mer energi. For eksempel stå opp til samme tid, spise til faste tider og ha en fast leggetid.',
         },
         {
           id: 50,
@@ -483,7 +483,7 @@
           cat: 'hobbies',
           examType: 'C',
           q: 'Synes du det er viktig å ha hobbyer?',
-          a: 'Ja, jeg synes det er viktig å spise sunn mat. Sunn mat gir oss energi og gjør oss sterke. Jeg prøver å spise mye grønnsaker, frukt og proteiner som kjøtt eller fisk. Jeg prøver også å drikke nok vann og ikke spise for mye sukker. Hvis man spiser sunn mat, føler man seg bedre og har mer energi i hverdagen.',
+          a: 'Ja, jeg synes det er veldig viktig å ha hobbyer. Hobbyer hjelper oss å slappe av og koble av fra stress i hverdagen. De gjør oss glade og gir oss noe å glede oss til. Hobbyer kan også hjelpe oss å møte nye mennesker og få venner. Jeg tror alle trenger noe de gjør bare fordi de liker det, ikke fordi de må.',
         },
         {
           id: 66,
@@ -504,14 +504,14 @@
           cat: 'hobbies',
           examType: 'A',
           q: 'Kan du fortelle om noe du vil lære?',
-          a: 'Jeg vil ikke jobbe som fisker. Det er en viktig jobb, men det er hardt arbeid. Man må jobbe lange dager, ofte ute i kaldt vær. Jeg liker bedre en jobb der jeg kan være inne og jobbe med mennesker. Men jeg respekterer de som jobber med det, fordi det er viktig for samfunnet.',
+          a: 'Jeg vil gjerne lære å kjøre bil. Jeg har ikke sertifikat ennå, men det er noe jeg drømmer om. Med bil ville det vært mye lettere å komme seg rundt, spesielt om vinteren. Jeg vil også lære mer om data og teknologi, fordi det er viktig i dagens arbeidsliv. Og selvfølgelig vil jeg fortsette å lære norsk til jeg snakker det flytende!',
         },
         {
           id: 69,
           cat: 'travel',
           examType: 'A',
           q: 'Fortell om et sted i Norge du har vært eller ønsker å reise til.',
-          a: 'Jeg har lyst til å reise til Spania. Der er det varmt og fint. Jeg liker sol og strand. Jeg vil også smake på spansk mat. Paella og tapas ser veldig godt ut. Kanskje jeg kan lære litt spansk også. Jeg håper jeg kan reise dit en dag.',
+          a: 'Jeg har lyst til å reise til Bergen. Jeg har hørt det er en veldig vakker by med fargerike hus og fjorder. Bryggen i Bergen er et kjent sted som ser fantastisk ut på bilder. Jeg vil også se fjordene fra en båt. Bergen er kjent for regn, men jeg synes det ser fint og grønt ut. Jeg håper å komme dit en dag.',
         },
         {
           id: 70,
@@ -602,7 +602,7 @@
           cat: 'food',
           examType: 'A',
           q: 'Hva liker du å spise? Hva slags mat liker du best?',
-          a: 'For meg er det aldri veldig varmt i Norge. Men når det er varme dager, liker jeg å være ute. Vi går på stranda eller på tur. Da spiser vi noe enkelt, for eksempel pølser eller annen lett mat. Når det er kaldt, liker jeg varm mat, for eksempel suppe eller gryterett. Det gjør meg varm og mett.',
+          a: 'Jeg liker best maten fra hjemlandet mitt. Vi bruker mye krydder og urter som gir god smak. Jeg liker spesielt retter med lam, kylling og ris. Men jeg har også lært å like norsk mat. Fisk og poteter er gode, og jeg liker kjøttkaker. Jeg prøver å lage mat hjemme så ofte som mulig fordi det er sunnere og billigere.',
         },
         {
           id: 85,
@@ -616,7 +616,7 @@
           cat: 'food',
           examType: 'A',
           q: 'Kan du lage mat? Hva lager du best?',
-          a: 'Jeg liker å spise variert mat, men jeg er spesielt glad i italiensk mat. Jeg elsker pizza og pasta og alt som er laget med tomater og olivenolje. Jeg prøver å lage mat hjemme så ofte som mulig. Da vet jeg hva jeg får i meg. Jeg er også åpen for å prøve nye retter fra forskjellige land.',
+          a: 'Ja, jeg liker å lage mat. Jeg har lært mye fra moren min og fra videoer på YouTube. Det jeg lager best er tradisjonell mat fra hjemlandet mitt. Jeg er spesielt flink til å lage kjøttgryte med ris og krydder. Det tar litt tid, men det smaker veldig godt. Familien min liker alltid maten jeg lager, og det gjør meg stolt.',
         },
         {
           id: 87,
@@ -721,7 +721,7 @@
           cat: 'society',
           examType: 'C',
           q: 'Mener du at innvandrere bør tilpasse seg norsk kultur?',
-          a: 'Jeg mener at alle foreldre bør lære barna å være snille og respektere andre. Det er viktig at barn lærer gode verdier, for eksempel å være ærlige og hjelpsomme. Foreldre bør også lære barna å ta ansvar, for eksempel å rydde etter seg og gjøre lekser. Det er også viktig å lære dem å være høflige og takke for hjelp.',
+          a: 'Jeg mener at innvandrere bør lære det norske språket og respektere norske lover og regler. Det er viktig å delta i samfunnet og forstå norske verdier. Men jeg synes man også bør få beholde sin egen kultur og tradisjoner. Det er mulig å integrere seg og samtidig ha sin egen identitet. Mangfold gjør samfunnet rikere, så lenge man respekterer hverandre.',
         },
         {
           id: 102,
@@ -826,7 +826,7 @@
           cat: 'situations',
           examType: 'B',
           q: 'Hva ville du gjort hvis du var sen til jobb?',
-          a: 'Hvis jeg fant en lommebok på gaten, ville jeg prøvd å finne eieren. Jeg ville sett om det var et navn eller et telefonnummer inni. Hvis ikke, ville jeg levert den til politiet. Jeg synes det er viktig å være ærlig og gjøre det rette. Hvis jeg mistet lommeboken min, ville jeg også håpet at noen leverte den tilbake til meg.',
+          a: 'Hvis jeg var sen til jobb, ville jeg ringt sjefen min så snart som mulig for å si at jeg kommer sent og forklare grunnen. Det er viktig å være ærlig og gi beskjed. Etterpå ville jeg kommet så raskt jeg kunne og beklaget forsinkelsen. Jeg ville prøvd å jobbe litt lenger for å ta igjen det tapte. Det er viktig å vise at man tar jobben sin seriøst.',
         },
         {
           id: 117,
@@ -840,21 +840,21 @@
           cat: 'situations',
           examType: 'B',
           q: 'Hva gjør du hvis naboen lager for mye bråk om natten?',
-          a: 'Jeg prøver å øve på norsk hver dag. Jeg ser på norske filmer og hører på podkaster for å bli vant til språket. Jeg snakker også med venner og kollegaer på norsk, selv om det noen ganger er vanskelig. Noen ganger leser jeg bøker eller aviser for å lære nye ord. Jeg tror det viktigste er å bruke språket så mye som mulig.',
+          a: 'Hvis naboen lager for mye bråk om natten, ville jeg først prøvd å snakke med naboen høflig og forklare at bråket forstyrrer søvnen min. Kanskje naboen ikke vet at det er så høyt. Hvis det ikke hjalp, ville jeg kontaktet utleier eller styret i borettslaget. Det er regler om ro om natten i Norge, og det er viktig at alle respekterer dem.',
         },
         {
           id: 119,
           cat: 'situations',
           examType: 'B',
           q: 'Hva gjør du hvis butikken har gitt deg for lite vekslepenger?',
-          a: 'I pausene slapper jeg av. Jeg spiser mat og drikker kaffe eller te. Noen ganger snakker jeg med venner og klassekamerater. Hvis det er fint vær, går vi en liten tur ute. Noen ganger bruker jeg mobilen til å sjekke nyheter eller sende meldinger. Pausen er bra for å hvile før vi fortsetter undervisningen.',
+          a: 'Hvis butikken har gitt meg for lite vekslepenger, ville jeg gått tilbake til kassen og sagt fra på en høflig måte. Jeg ville forklart at jeg tror det er en feil og vist kvitteringen. Jeg tror det vanligvis er en misforståelse, ikke noe bevisst. Det er viktig å si fra rolig og tydelig. De fleste butikker løser slike problemer raskt og retter opp feilen.',
         },
         {
           id: 120,
           cat: 'situations',
           examType: 'B',
           q: 'Hva gjør du hvis du ikke forstår noe på norsk?',
-          a: 'I pausene slapper jeg av. Jeg spiser mat og drikker kaffe eller te. Noen ganger snakker jeg med venner og klassekamerater. Hvis det er fint vær, går vi en liten tur ute. Noen ganger bruker jeg mobilen til å sjekke nyheter eller sende meldinger. Pausen er bra for å hvile før vi fortsetter undervisningen.',
+          a: 'Hvis jeg ikke forstår noe på norsk, spør jeg personen om å gjenta eller snakke litt saktere. Jeg sier gjerne "Kan du si det igjen?" eller "Kan du snakke litt saktere?". Jeg er ikke flau over å spørre, fordi det er bedre å forstå enn å late som. Noen ganger bruker jeg også en ordbok eller Google Translate for å forstå ord jeg ikke kjenner.',
         },
         {
           id: 121,
