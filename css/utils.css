@@ -1,3 +1,22 @@
+      /* ── Tab header row ── */
+      .tab-header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      @media (max-width: 768px) {
+        .tab-header-row {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .tab-header-row .search-input {
+          width: 100%;
+        }
+      }
+
       /* ── Modal ── */
       .modal-overlay {
         position: fixed;

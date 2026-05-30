@@ -2,7 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Norsk B1" />
+    <meta name="theme-color" content="#1a2235" />
+    <link rel="manifest" href="manifest.json" />
     <title>Norsk B1 Oral Exam Tracker</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap"
@@ -102,8 +108,11 @@
     <!-- ── END AUTH GATE ──────────────────────────────────────────────────────── -->
 
     <div class="app" style="display:none">
+      <!-- Sidebar backdrop (mobile) -->
+      <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
       <!-- STICKY TOP BAR -->
       <div class="topbar">
+        <button class="topbar-hamburger" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Open menu">&#9776;</button>
         <div class="topbar-title">
           &#127475;&#127476; Norsk B1 Oral Exam Tracker
         </div>
@@ -263,17 +272,8 @@
 
           <!-- ALL QUESTIONS TAB -->
           <div id="tab-questions" class="hidden">
-            <div
-              style="
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin-bottom: 16px;
-                flex-wrap: wrap;
-                gap: 12px;
-              "
-            >
-              <h2 style="font-size: 1.5rem">All Questions</h2>
+            <div class="tab-header-row">
+              <h2 style="font-size: 1.4rem">All Questions</h2>
               <input
                 class="search-input"
                 id="searchInput"
@@ -725,6 +725,49 @@
         <!-- .main-content -->
       </div>
       <!-- .body-layout -->
+
+      <!-- ── MOBILE BOTTOM NAV ─────────────────────────────────────────────── -->
+      <nav class="mobile-nav" id="mobileNav" aria-label="Main navigation">
+        <div class="mobile-nav-inner">
+          <button class="mobile-nav-btn active" data-tab="today" onclick="showTab('today');closeSidebar()" aria-label="Today">
+            <span class="mnav-icon">&#128197;</span>
+            <span>Today</span>
+          </button>
+          <button class="mobile-nav-btn" data-tab="questions" onclick="showTab('questions');closeSidebar()" aria-label="Questions">
+            <span class="mnav-icon">&#128218;</span>
+            <span>Questions</span>
+            <span class="mnav-badge hidden" id="mnav-badge-questions"></span>
+          </button>
+          <button class="mobile-nav-btn" data-tab="study" onclick="showTab('study');closeSidebar()" aria-label="Study">
+            <span class="mnav-icon">&#127891;</span>
+            <span>Study</span>
+          </button>
+          <button class="mobile-nav-btn" data-tab="vocab" onclick="showTab('vocab');closeSidebar()" aria-label="Vocabulary">
+            <span class="mnav-icon">&#128214;</span>
+            <span>Vocab</span>
+          </button>
+          <button class="mobile-nav-btn" id="moreNavBtn" onclick="toggleMoreDrawer()" aria-label="More">
+            <span class="mnav-icon">&#8943;</span>
+            <span>More</span>
+          </button>
+        </div>
+      </nav>
+
+      <!-- ── MOBILE "MORE" DRAWER ──────────────────────────────────────────── -->
+      <div class="sidebar-backdrop" id="drawerBackdrop" onclick="closeMoreDrawer()" style="display:none"></div>
+      <div class="mobile-more-drawer" id="moreDrawer">
+        <div class="mobile-more-drawer-handle"></div>
+        <div class="mobile-more-drawer-title">More</div>
+        <button class="mobile-more-btn" data-tab="review" onclick="showTab('review');closeMoreDrawer()">
+          &#128257; Weekly Review
+          <span id="mnav-badge-review-more" style="margin-left:auto;background:#ef4444;color:#fff;font-size:0.7rem;font-weight:700;border-radius:20px;padding:1px 7px;display:none"></span>
+        </button>
+        <button class="mobile-more-btn" data-tab="progress" onclick="showTab('progress');closeMoreDrawer()">&#128202; Progress</button>
+        <button class="mobile-more-btn" data-tab="examguide" onclick="showTab('examguide');closeMoreDrawer()">&#127891; Exam Guide</button>
+        <button class="mobile-more-btn" data-tab="add" onclick="showTab('add');closeMoreDrawer()">&#10133; Add Question</button>
+        <button id="moreAdminBtn" class="mobile-more-btn" data-tab="admin" onclick="showTab('admin');renderAdmin();closeMoreDrawer()" style="display:none">&#128274; Access Manager</button>
+      </div>
+
     </div>
     <!-- .app -->
 

@@ -15,8 +15,16 @@
           document.getElementById('tab-' + t).classList.add('hidden');
         });
         document.getElementById('tab-' + tab).classList.remove('hidden');
-        // Update sidebar nav button active state
+        // Update sidebar nav buttons
         document.querySelectorAll('.sidebar-nav-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.tab === tab);
+        });
+        // Update mobile bottom nav buttons
+        document.querySelectorAll('.mobile-nav-btn[data-tab]').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.tab === tab);
+        });
+        // Update more drawer buttons
+        document.querySelectorAll('.mobile-more-btn[data-tab]').forEach(btn => {
           btn.classList.toggle('active', btn.dataset.tab === tab);
         });
         if (tab === 'today') renderToday();
@@ -27,6 +35,78 @@
         if (tab === 'vocab') renderVocab();
         if (tab === 'add') renderAddForm();
         renderSidebar();
+        // Scroll to top of main content
+        const mc = document.querySelector('.main-content');
+        if (mc) mc.scrollTop = 0;
+      }
+
+      // ── Responsive nav sync ───────────────────────────────────────────────────────
+      // When on desktop (>768px), ensure sidebar is always visible and drawers are closed
+      function _syncNavForViewport() {
+        const isMobile = window.innerWidth <= 768;
+        const sidebar = document.getElementById('sidebar');
+        const mobileNav = document.getElementById('mobileNav');
+        const hamburger = document.getElementById('hamburgerBtn');
+        if (!isMobile) {
+          // Desktop: always show sidebar inline, hide mobile elements
+          if (sidebar) { sidebar.classList.remove('open'); sidebar.style.transform = ''; }
+          const backdrop = document.getElementById('sidebarBackdrop');
+          if (backdrop) backdrop.classList.remove('open');
+          document.body.style.overflow = '';
+          if (mobileNav) mobileNav.style.setProperty('display', 'none', 'important');
+          if (hamburger) hamburger.style.setProperty('display', 'none', 'important');
+        } else {
+          // Mobile: un-hide bottom nav and hamburger
+          if (mobileNav) { mobileNav.style.removeProperty('display'); mobileNav.style.setProperty('display', 'block', 'important'); }
+          if (hamburger) { hamburger.style.removeProperty('display'); hamburger.style.setProperty('display', 'inline-flex', 'important'); }
+        }
+      }
+      window.addEventListener('resize', _syncNavForViewport);
+      // Run once on load to fix the display:none parent quirk
+      document.addEventListener('DOMContentLoaded', _syncNavForViewport);
+
+      // ── Sidebar (mobile drawer) ───────────────────────────────────────────────────
+      function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        if (!sidebar) return;
+        const isOpen = sidebar.classList.contains('open');
+        if (isOpen) {
+          closeSidebar();
+        } else {
+          sidebar.classList.add('open');
+          if (backdrop) backdrop.classList.add('open');
+          document.body.style.overflow = 'hidden';
+        }
+      }
+      function closeSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        if (sidebar) sidebar.classList.remove('open');
+        if (backdrop) backdrop.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+
+      // ── More drawer (mobile) ──────────────────────────────────────────────────────
+      function toggleMoreDrawer() {
+        const drawer = document.getElementById('moreDrawer');
+        const backdrop = document.getElementById('drawerBackdrop');
+        if (!drawer) return;
+        const isOpen = drawer.classList.contains('open');
+        if (isOpen) {
+          closeMoreDrawer();
+        } else {
+          drawer.classList.add('open');
+          if (backdrop) { backdrop.style.display = 'block'; }
+          document.body.style.overflow = 'hidden';
+        }
+      }
+      function closeMoreDrawer() {
+        const drawer = document.getElementById('moreDrawer');
+        const backdrop = document.getElementById('drawerBackdrop');
+        if (drawer) drawer.classList.remove('open');
+        if (backdrop) backdrop.style.display = 'none';
+        document.body.style.overflow = '';
       }
 
       function sidebarCatFilter(catId, el) {
@@ -56,11 +136,20 @@
             state.answers[q.id]?.trim()
         ).length;
 
-        // Update nav badges
+        // Update nav badges (sidebar + mobile)
         const bq = document.getElementById('badge-questions');
         if (bq) bq.textContent = total;
         const br = document.getElementById('badge-review');
         if (br) br.textContent = reviewCount || '';
+        // Mobile nav badges
+        const mbq = document.getElementById('mnav-badge-questions');
+        if (mbq) { mbq.textContent = total; mbq.classList.toggle('hidden', !total); }
+        const mbrMore = document.getElementById('mnav-badge-review-more');
+        if (mbrMore) { mbrMore.textContent = reviewCount; mbrMore.style.display = reviewCount ? '' : 'none'; }
+        // Sync admin button visibility in more drawer
+        const adminBtn = document.getElementById('adminNavBtn');
+        const moreAdminBtn = document.getElementById('moreAdminBtn');
+        if (moreAdminBtn && adminBtn) moreAdminBtn.style.display = adminBtn.style.display;
 
         // Update topbar chips
         const done = qs.filter(q => state.answers[q.id]?.trim()).length;

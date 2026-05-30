@@ -76,6 +76,8 @@
     if (state === 'off') {
       if (gate) gate.classList.add('hidden');
       if (app)  app.style.display = '';
+      // Sync nav visibility after app becomes visible
+      if (typeof _syncNavForViewport === 'function') _syncNavForViewport();
       return;
     }
 

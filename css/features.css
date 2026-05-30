@@ -169,11 +169,16 @@
         font-family: 'DM Sans', sans-serif;
         border: 1px solid #c4b5fd;
         border-radius: 6px;
-        padding: 4px 8px;
+        padding: 6px 8px;
         background: #fff;
         color: #4c1d95;
         cursor: pointer;
         outline: none;
+        min-height: 36px;
+        -webkit-appearance: none;
+      }
+      @media (max-width: 768px) {
+        .mic-selector-select { font-size: 1rem; min-height: 44px; } /* prevent iOS zoom */
       }
       .mic-selector-select:focus {
         border-color: #7c3aed;
