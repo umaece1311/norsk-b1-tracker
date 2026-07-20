@@ -14,6 +14,20 @@
         ].forEach(t => {
           document.getElementById('tab-' + t).classList.add('hidden');
         });
+        // today.js and questions.js both render question cards with the same
+        // id="card-N"/id="trans-N" for shared question ids. Clear the container
+        // of whichever of these tabs isn't the one being shown, so at most one
+        // copy of any card id exists in the DOM — otherwise getElementById()
+        // inside card action handlers (Translate/Pronunciation) can silently
+        // resolve to a hidden, zero-size duplicate from the other tab.
+        if (tab !== 'today') {
+          const el = document.getElementById('todayCards');
+          if (el) el.innerHTML = '';
+        }
+        if (tab !== 'questions') {
+          const el = document.getElementById('questionsList');
+          if (el) el.innerHTML = '';
+        }
         document.getElementById('tab-' + tab).classList.remove('hidden');
         // Update sidebar nav buttons
         document.querySelectorAll('.sidebar-nav-btn').forEach(btn => {
