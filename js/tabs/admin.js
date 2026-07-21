@@ -19,9 +19,10 @@
             _db.collection('accessList').orderBy('grantedAt', 'desc').get()
           ]);
 
-          const pending = reqSnap.docs.filter(d => d.data().status === 'pending');
-          const active  = listSnap.docs.filter(d => d.data().status === 'active');
-          const revoked = listSnap.docs.filter(d => d.data().status === 'revoked');
+          const pending  = reqSnap.docs.filter(d => d.data().status === 'pending');
+          const rejected = reqSnap.docs.filter(d => d.data().status === 'rejected');
+          const active   = listSnap.docs.filter(d => d.data().status === 'active');
+          const revoked  = listSnap.docs.filter(d => d.data().status === 'revoked');
 
           const fmtDate = ts => {
             if (!ts?.toDate) return '—';
@@ -87,6 +88,25 @@
               }).join('')
             : '';
 
+          const rejectedHTML = rejected.length
+            ? rejected.map(doc => {
+                const d = doc.data();
+                return `
+                  <div class="admin-user-card" id="rej-${doc.id}" style="opacity:0.6">
+                    ${avatar(d)}
+                    <div class="admin-user-info">
+                      <div class="admin-user-name">${escapeHtml(d.displayName || '—')}</div>
+                      <div class="admin-user-email">${escapeHtml(d.email)}</div>
+                      <div class="admin-user-meta">Rejected</div>
+                    </div>
+                    <div class="admin-actions">
+                      <button class="btn btn-green" onclick="approveUser('${doc.id}')">&#10003; Approve</button>
+                      <button class="btn btn-ghost" onclick="restoreRequestToPending('${doc.id}')">Restore to pending</button>
+                    </div>
+                  </div>`;
+              }).join('')
+            : '';
+
           el.innerHTML = `
             <div class="admin-header">
               <h2 style="font-size:1.4rem">&#128274; Access Manager</h2>
@@ -116,6 +136,15 @@
                 <span class="admin-badge admin-badge-revoked">${revoked.length}</span>
               </div>
               ${revokedHTML}
+            </div>` : ''}
+
+            ${rejected.length ? `
+            <div class="admin-section">
+              <div class="admin-section-title">
+                Rejected
+                <span class="admin-badge admin-badge-revoked">${rejected.length}</span>
+              </div>
+              ${rejectedHTML}
             </div>` : ''}`;
 
         } catch (e) {
@@ -193,5 +222,19 @@
           renderAdmin();
         } catch (e) {
           showToast('Error: ' + e.message);
+        }
+      }
+
+      // ── Restore a rejected request back to pending ────────────────────────────────
+      async function restoreRequestToPending(uid) {
+        const card = document.getElementById('rej-' + uid);
+        if (card) card.style.opacity = '0.5';
+        try {
+          await _db.collection('accessRequests').doc(uid).update({ status: 'pending' });
+          showToast('Request moved back to pending.');
+          renderAdmin();
+        } catch (e) {
+          showToast('Error: ' + e.message);
+          if (card) card.style.opacity = '';
         }
       }
