@@ -28,6 +28,7 @@
   const _provider  = new firebase.auth.GoogleAuthProvider();
   let   _fbUser    = null;
   let   _syncTimer = null;
+  let   _accessUnsub = null;
 
   // ─── SYNC DOT ─────────────────────────────────────────────────────────────────
   function _dot(s) {
@@ -149,6 +150,7 @@
         }
         _showGate('off', user);
         _loadCloud(user.uid);
+        _watchAccess(user);
         return;
       }
 
@@ -157,7 +159,7 @@
       if (reqDoc.exists) {
         const status = reqDoc.data().status;
         if (status === 'pending')  { _showGate('pending',  user); return; }
-        if (status === 'approved') { _showGate('off', user); _loadCloud(user.uid); return; }
+        if (status === 'approved') { _showGate('off', user); _loadCloud(user.uid); _watchAccess(user); return; }
         if (status === 'rejected') { _showGate('denied',   user); return; }
       }
 
@@ -168,6 +170,25 @@
       _gateError('Error checking access: ' + e.message);
       _showGate('request', user);
     }
+  }
+
+  // ─── LIVE ACCESS WATCHER ────────────────────────────────────────────────────────
+  // While the app is open, watch this user's own accessList doc so a revoke,
+  // delete, or expiry made from the admin panel (another tab/device/session)
+  // locks them out immediately instead of only on next sign-in.
+  function _watchAccess(user) {
+    if (_accessUnsub) { _accessUnsub(); _accessUnsub = null; }
+    _accessUnsub = _db.collection('accessList').doc(user.uid)
+      .onSnapshot(function(doc) {
+        if (!doc.exists || doc.data().status !== 'active') {
+          _showGate('denied', user);
+          return;
+        }
+        const expiresAt = doc.data().expiresAt;
+        if (expiresAt?.toDate && expiresAt.toDate().getTime() <= Date.now()) {
+          _showGate('denied', user);
+        }
+      }, function() { /* ignore transient listener errors */ });
   }
 
   // ─── SUBMIT ACCESS REQUEST (after payment) ────────────────────────────────────
@@ -264,6 +285,7 @@
     _authResolved = true;
     _fbUser = user;
     _updateAuthBtn(user);
+    if (_accessUnsub) { _accessUnsub(); _accessUnsub = null; }
     if (user) {
       _checkAccess(user);
     } else {
