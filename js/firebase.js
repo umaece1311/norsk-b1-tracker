@@ -12,6 +12,15 @@
   // Replace with your Google account email. Only this email has owner / admin access.
   const OWNER_EMAIL = 'umaece1311@gmail.com';
 
+  // ─── ACCESS DURATIONS ─────────────────────────────────────────────────────────
+  const ACCESS_DURATIONS = {
+    daily:   { label: 'Daily',    ms: 24 * 60 * 60 * 1000 },
+    weekly:  { label: 'Weekly',   ms: 7 * 24 * 60 * 60 * 1000 },
+    monthly: { label: 'Monthly',  ms: 30 * 24 * 60 * 60 * 1000 },
+    yearly:  { label: 'Yearly',   ms: 365 * 24 * 60 * 60 * 1000 },
+    forever: { label: 'No expiry', ms: null }
+  };
+
   // ─── INIT ─────────────────────────────────────────────────────────────────────
   firebase.initializeApp(_FB_CONFIG);
   const _auth      = firebase.auth();
@@ -119,9 +128,11 @@
     if (user.email === OWNER_EMAIL) {
       _showGate('off', user);
       _loadCloud(user.uid);
-      // Show admin tab
+      // Show admin tab (sidebar + mobile "More" drawer)
       const adminBtn = document.getElementById('adminNavBtn');
       if (adminBtn) adminBtn.style.display = '';
+      const moreAdminBtn = document.getElementById('moreAdminBtn');
+      if (moreAdminBtn) moreAdminBtn.style.display = '';
       return;
     }
 
@@ -130,6 +141,12 @@
       // Check active access list
       const accessDoc = await _db.collection('accessList').doc(user.uid).get();
       if (accessDoc.exists && accessDoc.data().status === 'active') {
+        const expiresAt = accessDoc.data().expiresAt;
+        if (expiresAt?.toDate && expiresAt.toDate().getTime() <= Date.now()) {
+          try { await _db.collection('accessList').doc(user.uid).update({ status: 'revoked' }); } catch (e) {}
+          _showGate('denied', user);
+          return;
+        }
         _showGate('off', user);
         _loadCloud(user.uid);
         return;

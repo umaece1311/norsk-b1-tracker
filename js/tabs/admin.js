@@ -33,6 +33,18 @@
             ? `<img class="admin-user-avatar" src="${d.photoURL}" onerror="this.style.display='none'">`
             : `<div class="admin-user-avatar">&#128100;</div>`;
 
+          const durationOptions = (selected) => Object.entries(ACCESS_DURATIONS)
+            .map(([key, v]) => `<option value="${key}" ${key === selected ? 'selected' : ''}>${v.label}</option>`)
+            .join('');
+
+          const expiryMeta = (d) => {
+            if (!d.expiresAt?.toDate) return '<span class="admin-badge admin-badge-active" style="margin-left:6px">No expiry</span>';
+            const msLeft = d.expiresAt.toDate().getTime() - Date.now();
+            if (msLeft <= 0) return '<span class="admin-badge admin-badge-revoked" style="margin-left:6px">Expired</span>';
+            const days = Math.ceil(msLeft / (24 * 60 * 60 * 1000));
+            return `<span class="admin-badge admin-badge-pending" style="margin-left:6px">Expires ${fmtDate(d.expiresAt)} (${days}d left)</span>`;
+          };
+
           const pendingHTML = pending.length
             ? pending.map(doc => {
                 const d = doc.data();
@@ -45,8 +57,10 @@
                       <div class="admin-user-meta">Requested ${fmtDate(d.requestedAt)}</div>
                     </div>
                     <div class="admin-actions">
-                      <button class="btn btn-green" onclick="approveUser('${doc.id}')">&#10003; Approve</button>
+                      <select class="admin-duration-select" id="dur-${doc.id}">${durationOptions('forever')}</select>
+                      <button class="btn btn-green" onclick="approveUser('${doc.id}', document.getElementById('dur-${doc.id}').value)">&#10003; Approve</button>
                       <button class="btn btn-danger" onclick="rejectUser('${doc.id}')">&#10005; Reject</button>
+                      <button class="btn btn-ghost" onclick="deleteAccessRequest('${doc.id}')">Delete</button>
                     </div>
                   </div>`;
               }).join('')
@@ -61,9 +75,10 @@
                     <div class="admin-user-info">
                       <div class="admin-user-name">${escapeHtml(d.displayName || '—')}</div>
                       <div class="admin-user-email">${escapeHtml(d.email)}</div>
-                      <div class="admin-user-meta">Granted ${fmtDate(d.grantedAt)}</div>
+                      <div class="admin-user-meta">Granted ${fmtDate(d.grantedAt)} ${expiryMeta(d)}</div>
                     </div>
                     <div class="admin-actions">
+                      <select class="admin-duration-select" onchange="updateAccessDuration('${doc.id}', this.value)">${durationOptions(d.duration || 'forever')}</select>
                       <button class="btn btn-danger" onclick="revokeAccess('${doc.id}')">Revoke</button>
                     </div>
                   </div>`;
@@ -74,7 +89,7 @@
             ? revoked.map(doc => {
                 const d = doc.data();
                 return `
-                  <div class="admin-user-card" style="opacity:0.6">
+                  <div class="admin-user-card" id="usr-${doc.id}" style="opacity:0.6">
                     ${avatar(d)}
                     <div class="admin-user-info">
                       <div class="admin-user-name">${escapeHtml(d.displayName || '—')}</div>
@@ -82,7 +97,9 @@
                       <div class="admin-user-meta">Revoked</div>
                     </div>
                     <div class="admin-actions">
-                      <button class="btn btn-ghost" onclick="restoreAccess('${doc.id}')">Restore</button>
+                      <select class="admin-duration-select" id="dur-usr-${doc.id}">${durationOptions(d.duration || 'forever')}</select>
+                      <button class="btn btn-ghost" onclick="restoreAccess('${doc.id}', document.getElementById('dur-usr-${doc.id}').value)">Restore</button>
+                      <button class="btn btn-danger" onclick="deleteAccessGrant('${doc.id}')">Delete</button>
                     </div>
                   </div>`;
               }).join('')
@@ -100,8 +117,10 @@
                       <div class="admin-user-meta">Rejected</div>
                     </div>
                     <div class="admin-actions">
-                      <button class="btn btn-green" onclick="approveUser('${doc.id}')">&#10003; Approve</button>
+                      <select class="admin-duration-select" id="dur-rej-${doc.id}">${durationOptions('forever')}</select>
+                      <button class="btn btn-green" onclick="approveUser('${doc.id}', document.getElementById('dur-rej-${doc.id}').value)">&#10003; Approve</button>
                       <button class="btn btn-ghost" onclick="restoreRequestToPending('${doc.id}')">Restore to pending</button>
+                      <button class="btn btn-danger" onclick="deleteAccessRequest('${doc.id}')">Delete</button>
                     </div>
                   </div>`;
               }).join('')
@@ -162,19 +181,23 @@
       }
 
       // ── Approve a pending request ─────────────────────────────────────────────────
-      async function approveUser(uid) {
-        const card = document.getElementById('req-' + uid);
+      async function approveUser(uid, duration) {
+        const card = document.getElementById('req-' + uid) || document.getElementById('rej-' + uid);
         if (card) card.style.opacity = '0.5';
         try {
           const reqDoc = await _db.collection('accessRequests').doc(uid).get();
           const d = reqDoc.data();
+          const durKey = ACCESS_DURATIONS[duration] ? duration : 'forever';
+          const ms = ACCESS_DURATIONS[durKey].ms;
           await Promise.all([
             _db.collection('accessList').doc(uid).set({
               email:       d.email,
               displayName: d.displayName || '',
               photoURL:    d.photoURL    || '',
               grantedAt:   firebase.firestore.FieldValue.serverTimestamp(),
-              status:      'active'
+              status:      'active',
+              duration:    durKey,
+              expiresAt:   ms ? firebase.firestore.Timestamp.fromMillis(Date.now() + ms) : null
             }),
             _db.collection('accessRequests').doc(uid).update({ status: 'approved' })
           ]);
@@ -183,6 +206,22 @@
         } catch (e) {
           showToast('Error: ' + e.message);
           if (card) card.style.opacity = '';
+        }
+      }
+
+      // ── Change an active user's access duration ────────────────────────────────────
+      async function updateAccessDuration(uid, duration) {
+        const durKey = ACCESS_DURATIONS[duration] ? duration : 'forever';
+        const ms = ACCESS_DURATIONS[durKey].ms;
+        try {
+          await _db.collection('accessList').doc(uid).update({
+            duration:  durKey,
+            expiresAt: ms ? firebase.firestore.Timestamp.fromMillis(Date.now() + ms) : null
+          });
+          showToast('&#10003; Duration updated');
+          renderAdmin();
+        } catch (e) {
+          showToast('Error: ' + e.message);
         }
       }
 
@@ -215,9 +254,15 @@
       }
 
       // ── Restore a revoked user ────────────────────────────────────────────────────
-      async function restoreAccess(uid) {
+      async function restoreAccess(uid, duration) {
         try {
-          await _db.collection('accessList').doc(uid).update({ status: 'active' });
+          const durKey = ACCESS_DURATIONS[duration] ? duration : 'forever';
+          const ms = ACCESS_DURATIONS[durKey].ms;
+          await _db.collection('accessList').doc(uid).update({
+            status:    'active',
+            duration:  durKey,
+            expiresAt: ms ? firebase.firestore.Timestamp.fromMillis(Date.now() + ms) : null
+          });
           showToast('Access restored.');
           renderAdmin();
         } catch (e) {
@@ -232,6 +277,37 @@
         try {
           await _db.collection('accessRequests').doc(uid).update({ status: 'pending' });
           showToast('Request moved back to pending.');
+          renderAdmin();
+        } catch (e) {
+          showToast('Error: ' + e.message);
+          if (card) card.style.opacity = '';
+        }
+      }
+
+      // ── Delete a request doc entirely (pending or rejected) ────────────────────────
+      // Removing the doc lets the user submit a brand-new request from scratch.
+      async function deleteAccessRequest(uid) {
+        if (!confirm('Delete this request? The user will be able to request access again from scratch.')) return;
+        const card = document.getElementById('req-' + uid) || document.getElementById('rej-' + uid);
+        if (card) card.style.opacity = '0.3';
+        try {
+          await _db.collection('accessRequests').doc(uid).delete();
+          showToast('Request deleted.');
+          renderAdmin();
+        } catch (e) {
+          showToast('Error: ' + e.message);
+          if (card) card.style.opacity = '';
+        }
+      }
+
+      // ── Delete an access-list grant entirely (revoked users) ────────────────────────
+      async function deleteAccessGrant(uid) {
+        if (!confirm('Delete this access record? The user will be able to request access again from scratch.')) return;
+        const card = document.getElementById('usr-' + uid);
+        if (card) card.style.opacity = '0.3';
+        try {
+          await _db.collection('accessList').doc(uid).delete();
+          showToast('Access record deleted.');
           renderAdmin();
         } catch (e) {
           showToast('Error: ' + e.message);
