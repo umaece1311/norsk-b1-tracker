@@ -161,6 +161,9 @@
         const motivation =
           PDF_MOTIVATION[doneCount % PDF_MOTIVATION.length];
 
+        ensureVocabInState();
+        const EXAM_TYPE_LABEL = { A: 'Oppgave A — Describe', B: 'Oppgave B — Discuss', C: 'Oppgave C — Opinion' };
+
         // ── Table of contents: one row per category, linking to its anchor ────────
         const tocRowsHTML = cats
           .map(cat => {
@@ -176,57 +179,68 @@
           })
           .join('');
 
-        // ── Q&A sections, answers rendered as bullet points ────────────────────────
+        // ── Per-question vocabulary (dedupe within that question's own text) ──────
+        function vocabHTMLFor(q) {
+          const words = new Set();
+          extractWords(q.q).forEach(w => words.add(w));
+          if (q.a) extractWords(q.a).forEach(w => words.add(w));
+          const myAnswer = state.answers[q.id];
+          if (myAnswer) extractWords(myAnswer).forEach(w => words.add(w));
+          if (!words.size) return '';
+
+          const chips = [...words].sort().map(w => {
+            const en = state.vocab[w]?.en;
+            return `<span class="pdf-vocab-chip"><b>${escapeHtml(w)}</b>${en ? ' &ndash; ' + escapeHtml(en) : ''}</span>`;
+          }).join('');
+          return `
+        <div class="pdf-vocab-box">
+          <div class="pdf-vocab-label">📖 Vocabulary</div>
+          <div class="pdf-vocab-chips">${chips}</div>
+        </div>`;
+        }
+
+        // ── Q&A sections: grouped by category, then by exam type A/B/C ────────────
         const sectionsHTML = cats.map(cat => {
           const catQs = qs.filter(q => q.cat === cat.id);
           if (!catQs.length) return '';
 
-          const itemsHTML = catQs.map(q => {
-            const myAnswer = state.answers[q.id]?.trim();
-            const answerHTML = myAnswer
-              ? '<ul class="pdf-answer-list">' +
-                myAnswer
-                  .split(/(?<=[.!?])\s+/)
-                  .map(s => s.trim())
-                  .filter(Boolean)
-                  .map(s => `<li>${escapeHtml(s)}</li>`)
-                  .join('') +
-                '</ul>'
-              : '<span class="pdf-noanswer">✏️ Not answered yet &mdash; give it a try today!</span>';
-            return `
+          const typeGroupsHTML = ['A', 'B', 'C'].map(t => {
+            const typeQs = catQs.filter(q => q.examType === t);
+            if (!typeQs.length) return '';
+
+            const itemsHTML = typeQs.map(q => {
+              const myAnswer = state.answers[q.id]?.trim();
+              const answerHTML = myAnswer
+                ? '<ul class="pdf-answer-list">' +
+                  myAnswer
+                    .split(/(?<=[.!?])\s+/)
+                    .map(s => s.trim())
+                    .filter(Boolean)
+                    .map(s => `<li>${escapeHtml(s)}</li>`)
+                    .join('') +
+                  '</ul>'
+                : '<span class="pdf-noanswer">✏️ Not answered yet &mdash; give it a try today!</span>';
+              return `
       <div class="pdf-item" id="q-${q.id}">
         <div class="pdf-question"><span class="pdf-qnum">${q.id}</span> ${escapeHtml(q.q)}</div>
         <div class="pdf-answer ${myAnswer ? 'pdf-answer-done' : 'pdf-answer-empty'}">${answerHTML}</div>
+        ${vocabHTMLFor(q)}
+      </div>`;
+            }).join('');
+
+            return `
+      <div class="pdf-type-group">
+        <h3 class="pdf-type-${t}">${EXAM_TYPE_LABEL[t]}</h3>
+        ${itemsHTML}
       </div>`;
           }).join('');
 
           return `
     <div class="pdf-section" id="cat-${cat.id}">
       <h2>${cat.emoji} ${escapeHtml(cat.label)}</h2>
-      ${itemsHTML}
+      ${typeGroupsHTML}
     </div>`;
         }).join('');
-
-        // ── Vocabulary list: dedupe words across the scoped questions + answers ────
-        ensureVocabInState();
-        const vocabSet = new Set();
-        scopeQs.forEach(q => {
-          extractWords(q.q).forEach(w => vocabSet.add(w));
-          if (q.a) extractWords(q.a).forEach(w => vocabSet.add(w));
-          const myAnswer = state.answers[q.id];
-          if (myAnswer) extractWords(myAnswer).forEach(w => vocabSet.add(w));
-        });
-        const vocabWords = [...vocabSet].sort();
-        const vocabRowsHTML = vocabWords
-          .map(w => {
-            const en = state.vocab[w]?.en;
-            return `
-      <tr>
-        <td class="pdf-vocab-no">${escapeHtml(w)}</td>
-        <td class="pdf-vocab-en">${en ? escapeHtml(en) : '<span class="pdf-vocab-missing">&mdash;</span>'}</td>
-      </tr>`;
-          })
-          .join('');
 
         const printWindow = window.open('', '_blank');
         printWindow.document.write(`
@@ -268,6 +282,11 @@
   .pdf-toc a { color: #2563eb; font-weight: 700; text-decoration: none; }
   .pdf-section { margin-bottom: 30px; }
   .pdf-section h2 { font-size: 1.3rem; font-weight: 700; color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 5px; margin-bottom: 14px; }
+  .pdf-type-group { margin-bottom: 18px; }
+  .pdf-type-group h3 { font-size: 1rem; font-weight: 700; display: inline-block; padding: 3px 12px; border-radius: 20px; margin-bottom: 12px; }
+  .pdf-type-A { background: #dbeafe; color: #1d4ed8; }
+  .pdf-type-B { background: #dcfce7; color: #15803d; }
+  .pdf-type-C { background: #fef3c7; color: #92400e; }
   .pdf-item { margin-bottom: 20px; page-break-inside: avoid; }
   .pdf-question { font-weight: 700; margin-bottom: 6px; color: #1a2235; font-size: 1.15rem; }
   .pdf-qnum {
@@ -282,14 +301,11 @@
   .pdf-answer-done .pdf-answer-list li { color: #14532d; font-weight: 600; }
   .pdf-answer-empty { border-left-color: #fca5a5; }
   .pdf-noanswer { color: #dc2626; font-style: italic; font-weight: 600; }
-  .pdf-vocab { margin-top: 10px; page-break-before: always; }
-  .pdf-vocab h2 { font-size: 1.3rem; font-weight: 700; color: #7c3aed; border-bottom: 2px solid #7c3aed; padding-bottom: 5px; margin-bottom: 14px; }
-  .pdf-vocab table { width: 100%; border-collapse: collapse; font-size: 1rem; }
-  .pdf-vocab th { text-align: left; color: #666; font-size: 0.78rem; text-transform: uppercase; border-bottom: 2px solid #e5e7eb; padding: 6px 8px; }
-  .pdf-vocab td { padding: 7px 8px; border-bottom: 1px solid #f1f5f9; }
-  .pdf-vocab-no { font-weight: 700; color: #1a2235; }
-  .pdf-vocab-en { color: #15803d; font-weight: 600; }
-  .pdf-vocab-missing { color: #aaa; font-weight: 400; }
+  .pdf-vocab-box { margin: 10px 0 0 12px; padding: 8px 12px; background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; }
+  .pdf-vocab-label { font-size: 0.75rem; font-weight: 700; color: #7c3aed; text-transform: uppercase; margin-bottom: 6px; }
+  .pdf-vocab-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pdf-vocab-chip { font-size: 0.85rem; background: #fff; border: 1px solid #e9d5ff; border-radius: 6px; padding: 3px 8px; color: #4b5563; }
+  .pdf-vocab-chip b { color: #7c3aed; }
   .pdf-footer {
     margin-top: 30px; padding-top: 16px; border-top: 2px dashed #93c5fd;
     text-align: center; font-weight: 700; color: #7c3aed; font-size: 0.95rem;
@@ -319,14 +335,6 @@
   </div>
 
   ${sectionsHTML}
-
-  <div class="pdf-vocab">
-    <h2>📖 Vocabulary List (${vocabWords.length} words)</h2>
-    <table>
-      <tr><th>Norwegian</th><th>English</th></tr>
-      ${vocabRowsHTML || '<tr><td colspan="2" style="color:#aaa;padding:8px">No vocabulary found.</td></tr>'}
-    </table>
-  </div>
 
   <div class="pdf-footer">Du klarer dette! Keep practicing every day &mdash; lykke til p&aring; eksamen! 🎉</div>
   <script>window.onload = () => setTimeout(() => window.print(), 200);</script>
