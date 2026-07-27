@@ -283,6 +283,9 @@
                 placeholder="&#128269; Search questions&hellip;"
                 oninput="renderQuestions()"
               />
+              <button class="btn btn-primary" onclick="downloadQuestionsPdf()">
+                &#128190; Download PDF (Q&amp;A)
+              </button>
             </div>
             <div class="filter-bar" id="catFilters"></div>
             <div
@@ -644,12 +647,9 @@
 
           <!-- PROGRESS TAB -->
           <div id="tab-progress" class="hidden">
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
-              <h2 style="font-size: 1.5rem">Progress Overview</h2>
-              <button class="btn btn-primary" onclick="downloadProgressPdf()">
-                &#128190; Download PDF (Q&amp;A)
-              </button>
-            </div>
+            <h2 style="font-size: 1.5rem; margin-bottom: 20px">
+              Progress Overview
+            </h2>
             <div class="stats-grid" id="progressStats"></div>
             <div id="catProgress" style="margin-top: 8px"></div>
           </div>
