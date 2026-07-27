@@ -161,6 +161,22 @@
         const motivation =
           PDF_MOTIVATION[doneCount % PDF_MOTIVATION.length];
 
+        // ── Table of contents: one row per category, linking to its anchor ────────
+        const tocRowsHTML = cats
+          .map(cat => {
+            const catQs = qs.filter(q => q.cat === cat.id);
+            if (!catQs.length) return '';
+            const catDone = catQs.filter(q => state.answers[q.id]?.trim()).length;
+            return `
+      <tr>
+        <td><a href="#cat-${cat.id}">${cat.emoji} ${escapeHtml(cat.label)}</a></td>
+        <td>${catQs.length}</td>
+        <td>${catDone}/${catQs.length}</td>
+      </tr>`;
+          })
+          .join('');
+
+        // ── Q&A sections, answers rendered as bullet points ────────────────────────
         const sectionsHTML = cats.map(cat => {
           const catQs = qs.filter(q => q.cat === cat.id);
           if (!catQs.length) return '';
@@ -168,21 +184,49 @@
           const itemsHTML = catQs.map(q => {
             const myAnswer = state.answers[q.id]?.trim();
             const answerHTML = myAnswer
-              ? escapeHtml(myAnswer)
+              ? '<ul class="pdf-answer-list">' +
+                myAnswer
+                  .split(/(?<=[.!?])\s+/)
+                  .map(s => s.trim())
+                  .filter(Boolean)
+                  .map(s => `<li>${escapeHtml(s)}</li>`)
+                  .join('') +
+                '</ul>'
               : '<span class="pdf-noanswer">✏️ Not answered yet &mdash; give it a try today!</span>';
             return `
-      <div class="pdf-item">
+      <div class="pdf-item" id="q-${q.id}">
         <div class="pdf-question"><span class="pdf-qnum">${q.id}</span> ${escapeHtml(q.q)}</div>
         <div class="pdf-answer ${myAnswer ? 'pdf-answer-done' : 'pdf-answer-empty'}">${answerHTML}</div>
       </div>`;
           }).join('');
 
           return `
-    <div class="pdf-section">
+    <div class="pdf-section" id="cat-${cat.id}">
       <h2>${cat.emoji} ${escapeHtml(cat.label)}</h2>
       ${itemsHTML}
     </div>`;
         }).join('');
+
+        // ── Vocabulary list: dedupe words across the scoped questions + answers ────
+        ensureVocabInState();
+        const vocabSet = new Set();
+        scopeQs.forEach(q => {
+          extractWords(q.q).forEach(w => vocabSet.add(w));
+          if (q.a) extractWords(q.a).forEach(w => vocabSet.add(w));
+          const myAnswer = state.answers[q.id];
+          if (myAnswer) extractWords(myAnswer).forEach(w => vocabSet.add(w));
+        });
+        const vocabWords = [...vocabSet].sort();
+        const vocabRowsHTML = vocabWords
+          .map(w => {
+            const en = state.vocab[w]?.en;
+            return `
+      <tr>
+        <td class="pdf-vocab-no">${escapeHtml(w)}</td>
+        <td class="pdf-vocab-en">${en ? escapeHtml(en) : '<span class="pdf-vocab-missing">&mdash;</span>'}</td>
+      </tr>`;
+          })
+          .join('');
 
         const printWindow = window.open('', '_blank');
         printWindow.document.write(`
@@ -192,7 +236,7 @@
 <meta charset="UTF-8">
 <title>Norsk B1 — My Questions &amp; Answers</title>
 <style>
-  body { font-family: 'DM Sans', Arial, sans-serif; color: #1a2235; padding: 24px 32px; max-width: 800px; margin: 0 auto; }
+  body { font-family: 'DM Sans', Arial, sans-serif; color: #1a2235; padding: 24px 32px; max-width: 800px; margin: 0 auto; font-size: 1.05rem; }
   h1 { font-family: Georgia, serif; font-size: 1.7rem; margin-bottom: 4px; color: #1a2235; }
   h1 .flag { font-size: 1.4rem; }
   .pdf-meta { color: #666; font-size: 0.85rem; margin-bottom: 16px; }
@@ -215,26 +259,44 @@
   .pdf-progress-chip.total { background: #eef2ff; color: #4338ca; }
   .pdf-progress-chip.done { background: #dcfce7; color: #15803d; }
   .pdf-progress-chip.pct { background: #fef9c3; color: #92400e; }
-  .pdf-section { margin-bottom: 26px; page-break-inside: avoid; }
-  .pdf-section h2 { font-size: 1.15rem; font-weight: 700; color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 4px; margin-bottom: 12px; }
-  .pdf-item { margin-bottom: 14px; page-break-inside: avoid; }
-  .pdf-question { font-weight: 700; margin-bottom: 4px; color: #1a2235; }
+  .pdf-toc { margin-bottom: 30px; page-break-after: always; }
+  .pdf-toc h2 { font-size: 1.2rem; font-weight: 700; color: #2563eb; margin-bottom: 10px; }
+  .pdf-toc table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+  .pdf-toc th { text-align: left; color: #666; font-size: 0.78rem; text-transform: uppercase; border-bottom: 2px solid #e5e7eb; padding: 6px 8px; }
+  .pdf-toc td { padding: 8px; border-bottom: 1px solid #f1f5f9; }
+  .pdf-toc td:nth-child(2), .pdf-toc td:nth-child(3) { text-align: center; color: #666; }
+  .pdf-toc a { color: #2563eb; font-weight: 700; text-decoration: none; }
+  .pdf-section { margin-bottom: 30px; }
+  .pdf-section h2 { font-size: 1.3rem; font-weight: 700; color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 5px; margin-bottom: 14px; }
+  .pdf-item { margin-bottom: 20px; page-break-inside: avoid; }
+  .pdf-question { font-weight: 700; margin-bottom: 6px; color: #1a2235; font-size: 1.15rem; }
   .pdf-qnum {
     display: inline-block; background: #2563eb; color: #fff; font-weight: 700;
-    font-size: 0.75rem; border-radius: 50%; width: 20px; height: 20px;
-    text-align: center; line-height: 20px; margin-right: 4px;
+    font-size: 0.8rem; border-radius: 50%; width: 22px; height: 22px;
+    text-align: center; line-height: 22px; margin-right: 4px;
   }
-  .pdf-answer { white-space: pre-wrap; border-left: 3px solid #e5e7eb; padding-left: 10px; }
-  .pdf-answer-done { color: #14532d; border-left-color: #22c55e; font-weight: 600; }
+  .pdf-answer { border-left: 3px solid #e5e7eb; padding-left: 12px; font-size: 1.05rem; line-height: 1.55; }
+  .pdf-answer-list { margin: 0; padding-left: 18px; }
+  .pdf-answer-list li { margin-bottom: 4px; }
+  .pdf-answer-done { border-left-color: #22c55e; }
+  .pdf-answer-done .pdf-answer-list li { color: #14532d; font-weight: 600; }
   .pdf-answer-empty { border-left-color: #fca5a5; }
   .pdf-noanswer { color: #dc2626; font-style: italic; font-weight: 600; }
+  .pdf-vocab { margin-top: 10px; page-break-before: always; }
+  .pdf-vocab h2 { font-size: 1.3rem; font-weight: 700; color: #7c3aed; border-bottom: 2px solid #7c3aed; padding-bottom: 5px; margin-bottom: 14px; }
+  .pdf-vocab table { width: 100%; border-collapse: collapse; font-size: 1rem; }
+  .pdf-vocab th { text-align: left; color: #666; font-size: 0.78rem; text-transform: uppercase; border-bottom: 2px solid #e5e7eb; padding: 6px 8px; }
+  .pdf-vocab td { padding: 7px 8px; border-bottom: 1px solid #f1f5f9; }
+  .pdf-vocab-no { font-weight: 700; color: #1a2235; }
+  .pdf-vocab-en { color: #15803d; font-weight: 600; }
+  .pdf-vocab-missing { color: #aaa; font-weight: 400; }
   .pdf-footer {
     margin-top: 30px; padding-top: 16px; border-top: 2px dashed #93c5fd;
     text-align: center; font-weight: 700; color: #7c3aed; font-size: 0.95rem;
   }
   @media print {
     body { padding: 0; }
-    .pdf-section { break-inside: avoid; }
+    .pdf-item { break-inside: avoid; }
   }
 </style>
 </head>
@@ -247,9 +309,27 @@
     <span class="pdf-progress-chip done">✅ ${doneCount} answered</span>
     <span class="pdf-progress-chip pct">🔥 ${pct}% complete</span>
   </div>
+
+  <div class="pdf-toc">
+    <h2>📑 Contents &mdash; jump to a category</h2>
+    <table>
+      <tr><th>Category</th><th>Questions</th><th>Answered</th></tr>
+      ${tocRowsHTML}
+    </table>
+  </div>
+
   ${sectionsHTML}
+
+  <div class="pdf-vocab">
+    <h2>📖 Vocabulary List (${vocabWords.length} words)</h2>
+    <table>
+      <tr><th>Norwegian</th><th>English</th></tr>
+      ${vocabRowsHTML || '<tr><td colspan="2" style="color:#aaa;padding:8px">No vocabulary found.</td></tr>'}
+    </table>
+  </div>
+
   <div class="pdf-footer">Du klarer dette! Keep practicing every day &mdash; lykke til p&aring; eksamen! 🎉</div>
-  <script>window.onload = () => window.print();</script>
+  <script>window.onload = () => setTimeout(() => window.print(), 200);</script>
 </body>
 </html>`);
         printWindow.document.close();
