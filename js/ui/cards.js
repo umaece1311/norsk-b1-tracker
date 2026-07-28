@@ -45,6 +45,8 @@
       <div class="pdf-answer-content hidden" id="pdf-ans-${q.id}">${escapeHtml(q.a)}</div>
     </div>` : ''}
 
+    ${renderFollowUps(q)}
+
     <div class="action-row">
       <button class="btn btn-primary" onclick="saveAnswer(${q.id})">💾 Save</button>
       <button class="btn btn-ghost" onclick="toggleTransPanel(${q.id})">🌐 Translate</button>
@@ -110,5 +112,98 @@
       </div>
     </div>
   </div>`;
+      }
+
+      // ─── FOLLOW-UP QUESTIONS (user-added, attached to any main question) ───────────
+      function ensureFollowUpsInState() {
+        if (!state.followUps) state.followUps = {};
+      }
+
+      function renderFollowUps(q) {
+        ensureFollowUpsInState();
+        const items = state.followUps[q.id] || [];
+
+        const itemsHTML = items.map((fu, i) => {
+          const fuId = `${q.id}-f${i}`;
+          const fuAnswer = state.answers[fuId] || '';
+          return `
+      <div class="followup-item">
+        <div class="followup-item-head">
+          <div class="followup-q">${escapeHtml(fu.q)}</div>
+          <button class="btn-cq-delete" onclick="deleteFollowUp(${q.id},${i})" title="Delete follow-up">🗑</button>
+        </div>
+        <textarea class="answer-area followup-answer-area" id="ans-${fuId}" placeholder="Write your answer in Norwegian…" oninput="autoSaveAnswer('${fuId}')">${fuAnswer}</textarea>
+        ${fu.a ? `
+        <div class="pdf-answer-box">
+          <div class="pdf-answer-toggle" onclick="togglePdfAnswer('${fuId}', this)">
+            <span>📖</span> <span>Sample Answer</span> <span style="margin-left:auto;font-size:1rem">▼</span>
+          </div>
+          <div class="pdf-answer-content hidden" id="pdf-ans-${fuId}">${escapeHtml(fu.a)}</div>
+        </div>` : ''}
+        <button class="btn btn-primary" style="margin-top:6px" onclick="saveAnswer('${fuId}')">💾 Save</button>
+      </div>`;
+        }).join('');
+
+        return `
+    <div class="followup-box">
+      <div class="followup-label">🔁 Follow-up Questions</div>
+      ${itemsHTML}
+      <div class="followup-add-form hidden" id="followup-add-form-${q.id}">
+        <input class="followup-add-input" id="followup-add-q-${q.id}" placeholder="Follow-up question (Norwegian)…">
+        <textarea class="followup-add-input" id="followup-add-a-${q.id}" rows="2" placeholder="Sample answer (optional)…"></textarea>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="addFollowUp(${q.id})">➕ Add</button>
+          <button class="btn btn-gray" onclick="toggleFollowUpForm(${q.id})">Cancel</button>
+        </div>
+      </div>
+      <button class="btn btn-ghost followup-toggle-btn" id="followup-toggle-btn-${q.id}" onclick="toggleFollowUpForm(${q.id})">➕ Add Follow-up Question</button>
+    </div>`;
+      }
+
+      function toggleFollowUpForm(qId) {
+        const form = document.getElementById(`followup-add-form-${qId}`);
+        const btn = document.getElementById(`followup-toggle-btn-${qId}`);
+        if (!form) return;
+        const isHidden = form.classList.contains('hidden');
+        form.classList.toggle('hidden', !isHidden);
+        if (btn) btn.style.display = isHidden ? 'none' : '';
+        if (isHidden) document.getElementById(`followup-add-q-${qId}`)?.focus();
+      }
+
+      function addFollowUp(qId) {
+        ensureFollowUpsInState();
+        const qInput = document.getElementById(`followup-add-q-${qId}`);
+        const aInput = document.getElementById(`followup-add-a-${qId}`);
+        const q = qInput.value.trim();
+        const a = aInput.value.trim();
+        if (!q) { showToast('⚠️ Enter a follow-up question first.'); return; }
+
+        if (!state.followUps[qId]) state.followUps[qId] = [];
+        state.followUps[qId].push({ q, a });
+        saveState();
+
+        const card = document.getElementById('card-' + qId);
+        if (card) {
+          const box = card.querySelector('.followup-box');
+          if (box) box.outerHTML = renderFollowUps(allQuestions().find(x => x.id === qId));
+        }
+        showToast('✅ Follow-up added!');
+      }
+
+      function deleteFollowUp(qId, index) {
+        ensureFollowUpsInState();
+        if (!state.followUps[qId]) return;
+        if (!confirm('Delete this follow-up question?')) return;
+
+        state.followUps[qId].splice(index, 1);
+        if (!state.followUps[qId].length) delete state.followUps[qId];
+        saveState();
+
+        const card = document.getElementById('card-' + qId);
+        if (card) {
+          const box = card.querySelector('.followup-box');
+          if (box) box.outerHTML = renderFollowUps(allQuestions().find(x => x.id === qId));
+        }
+        showToast('🗑 Follow-up deleted.');
       }
 

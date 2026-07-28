@@ -12,7 +12,8 @@
         { id: 'society', label: 'Society', emoji: '🏙️' },
         { id: 'friends', label: 'Friends', emoji: '🤝' },
         { id: 'situations', label: 'Situations', emoji: '💡' },
-        { id: 'opinions', label: 'Opinions', emoji: '💭' },
+        { id: 'opinions', label: 'General', emoji: '💭' },
+        { id: 'followup', label: 'Follow-up Questions', emoji: '🔁' },
       ];
 
       const BASE_QS = [

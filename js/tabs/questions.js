@@ -199,6 +199,37 @@
         </div>`;
         }
 
+        // ── Answer text -> bullet-point <li> markup ────────────────────────────────
+        function answerBulletsHTML(answerText) {
+          if (!answerText) return '<span class="pdf-noanswer">✏️ Not answered yet &mdash; give it a try today!</span>';
+          return '<ul class="pdf-answer-list">' +
+            answerText
+              .split(/(?<=[.!?])\s+/)
+              .map(s => s.trim())
+              .filter(Boolean)
+              .map(s => `<li>${escapeHtml(s)}</li>`)
+              .join('') +
+            '</ul>';
+        }
+
+        // ── Follow-up questions attached to a main question ────────────────────────
+        function followUpsHTMLFor(q) {
+          const items = state.followUps?.[q.id] || [];
+          if (!items.length) return '';
+          return `
+        <div class="pdf-followups">
+          ${items.map((fu, i) => {
+            const fuId = `${q.id}-f${i}`;
+            const myAnswer = state.answers[fuId]?.trim();
+            return `
+          <div class="pdf-followup-item">
+            <div class="pdf-followup-q">🔁 ${escapeHtml(fu.q)}</div>
+            <div class="pdf-answer ${myAnswer ? 'pdf-answer-done' : 'pdf-answer-empty'}">${answerBulletsHTML(myAnswer)}</div>
+          </div>`;
+          }).join('')}
+        </div>`;
+        }
+
         // ── Q&A sections: grouped by category, then by exam type A/B/C ────────────
         const sectionsHTML = cats.map(cat => {
           const catQs = qs.filter(q => q.cat === cat.id);
@@ -210,21 +241,12 @@
 
             const itemsHTML = typeQs.map(q => {
               const myAnswer = state.answers[q.id]?.trim();
-              const answerHTML = myAnswer
-                ? '<ul class="pdf-answer-list">' +
-                  myAnswer
-                    .split(/(?<=[.!?])\s+/)
-                    .map(s => s.trim())
-                    .filter(Boolean)
-                    .map(s => `<li>${escapeHtml(s)}</li>`)
-                    .join('') +
-                  '</ul>'
-                : '<span class="pdf-noanswer">✏️ Not answered yet &mdash; give it a try today!</span>';
               return `
       <div class="pdf-item" id="q-${q.id}">
         <div class="pdf-question"><span class="pdf-qnum">${q.id}</span> ${escapeHtml(q.q)}</div>
-        <div class="pdf-answer ${myAnswer ? 'pdf-answer-done' : 'pdf-answer-empty'}">${answerHTML}</div>
+        <div class="pdf-answer ${myAnswer ? 'pdf-answer-done' : 'pdf-answer-empty'}">${answerBulletsHTML(myAnswer)}</div>
         ${vocabHTMLFor(q)}
+        ${followUpsHTMLFor(q)}
       </div>`;
             }).join('');
 
@@ -306,6 +328,9 @@
   .pdf-vocab-chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .pdf-vocab-chip { font-size: 0.85rem; background: #fff; border: 1px solid #e9d5ff; border-radius: 6px; padding: 3px 8px; color: #4b5563; }
   .pdf-vocab-chip b { color: #7c3aed; }
+  .pdf-followups { margin: 12px 0 0 12px; padding-left: 12px; border-left: 2px dashed #fca5a5; }
+  .pdf-followup-item { margin-bottom: 12px; page-break-inside: avoid; }
+  .pdf-followup-q { font-weight: 700; color: #991b1b; font-size: 1rem; margin-bottom: 4px; }
   .pdf-footer {
     margin-top: 30px; padding-top: 16px; border-top: 2px dashed #93c5fd;
     text-align: center; font-weight: 700; color: #7c3aed; font-size: 0.95rem;

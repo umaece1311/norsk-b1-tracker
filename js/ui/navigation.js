@@ -205,6 +205,7 @@
           friends: '#6b21a8',
           situations: '#7c2d12',
           opinions: '#0c4a6e',
+          followup: '#991b1b',
         };
         const catBgs = {
           'about-me': '#fce7f3',
@@ -220,6 +221,7 @@
           friends: '#fdf4ff',
           situations: '#fff7ed',
           opinions: '#f0f9ff',
+          followup: '#fee2e2',
         };
         catsEl.innerHTML = CATS.map(cat => {
           const count = qs.filter(q => q.cat === cat.id).length;

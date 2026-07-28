@@ -5,6 +5,7 @@
         timestamps: {}, // id -> ISO date string
         reviewMarked: {}, // id -> true (marked for review)
         customQs: [],
+        followUps: {}, // mainQuestionId -> [{ q, a }, ...]
         apiKey: '',
         todayIds: [],
         activeCat: 'all',
