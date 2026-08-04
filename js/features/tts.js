@@ -147,6 +147,7 @@
       function playFullScript() {
         if (!_scriptStopped) {
           if (_scriptPaused) resumeFullScript();
+          else pauseFullScript();
           return;
         }
 
