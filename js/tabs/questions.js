@@ -418,7 +418,7 @@
       // span via SpeechSynthesisUtterance.onboundary (karaoke-style).
       function pdfPlaybackScript() {
         return `
-  const SLNC_LINE = 550, SLNC_SECTION = 1200, RATE = 0.42;
+  const SLNC_WORD = 300, SLNC_LINE = 550, SLNC_SECTION = 1200, RATE = 0.42;
   let queue = [], index = 0, stopped = true, paused = false, runId = 0;
 
   function pause(ms, id) {
@@ -431,8 +431,8 @@
   }
 
   // Builds one flat, seekable queue across every question/follow-up item on
-  // the page: label steps (plain text) and sentence steps (drive per-word
-  // highlighting via onboundary).
+  // the page: label steps (plain text) and one step per WORD in each answer
+  // sentence, so playback reads deliberately with a pause after every word.
   function buildQueue() {
     const q = [];
     document.querySelectorAll('[id^="play-"]').forEach(wrap => {
@@ -443,9 +443,14 @@
       const list = document.getElementById('ans-list-' + playId);
       const sentences = list ? [...list.querySelectorAll('li')] : [];
       for (let pass = 0; pass < 2 && sentences.length; pass++) {
-        sentences.forEach((li, i) => {
-          const isLast = i === sentences.length - 1;
-          q.push({ playId, type: 'sentence', li, pause: isLast ? SLNC_SECTION : SLNC_LINE });
+        sentences.forEach((li, si) => {
+          const isLastSentence = si === sentences.length - 1;
+          const words = [...li.querySelectorAll('.pdf-word')];
+          words.forEach((wordEl, wi) => {
+            const isLastWord = wi === words.length - 1;
+            const stepPause = isLastWord ? (isLastSentence ? SLNC_SECTION : SLNC_LINE) : SLNC_WORD;
+            q.push({ playId, type: 'word', wordEl, pause: stepPause });
+          });
         });
       }
     });
@@ -454,30 +459,26 @@
 
   function speakStep(step, id) {
     return new Promise(resolve => {
-      const text = step.type === 'sentence'
-        ? (step.li.getAttribute('data-text') || step.li.textContent)
-        : step.text;
-      const words = step.type === 'sentence' ? [...step.li.querySelectorAll('.pdf-word')] : [];
+      if (step.type === 'word') {
+        document.querySelectorAll('.pdf-word.speaking').forEach(el => el.classList.remove('speaking'));
+        step.wordEl.classList.add('speaking');
+      }
+      const text = step.type === 'word' ? step.wordEl.textContent : step.text;
       const utt = new SpeechSynthesisUtterance(text);
       utt.lang = 'nb-NO';
       utt.rate = RATE;
-      if (words.length) {
-        utt.onboundary = e => {
-          if (e.name !== 'word') return;
-          words.forEach(w => w.classList.remove('speaking'));
-          const upto = text.slice(0, e.charIndex).trim();
-          const idx = upto ? upto.split(/\\s+/).length : 0;
-          if (words[idx]) words[idx].classList.add('speaking');
-        };
-      }
       utt.onend = () => resolve(id === runId);
       utt.onerror = () => resolve(id === runId);
       window.speechSynthesis.speak(utt);
     });
   }
 
+  let currentPlayId = null;
+
   function highlightCard(playId) {
-    clearHighlights();
+    if (playId === currentPlayId) return;
+    currentPlayId = playId;
+    document.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
     const wrap = document.getElementById('play-' + playId);
     if (!wrap) return;
     wrap.classList.add('playing');
@@ -539,6 +540,7 @@
     index = 0;
     queue = [];
     runId++;
+    currentPlayId = null;
     window.speechSynthesis.cancel();
     clearHighlights();
     updateButtons();

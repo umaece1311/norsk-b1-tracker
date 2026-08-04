@@ -20,6 +20,7 @@
       // (rate 0.55 vs the ~180wpm default) with 550ms pauses between lines and
       // 1200ms pauses between question/answer/follow-up sections.
       const SCRIPT_RATE = 0.42;
+      const SLNC_WORD = 300;
       const SLNC_LINE = 550;
       const SLNC_SECTION = 1200;
       const NUMBER_WORDS_NO = [
@@ -63,16 +64,25 @@
           .filter(Boolean);
       }
 
-      // Pushes one queue step per sentence in `text`; every sentence pauses
-      // SLNC_LINE, except the last one which pauses `endPause` (section gap).
+      // Pushes one queue step per WORD in `text` (each word its own utterance,
+      // paused SLNC_WORD apart) so playback reads deliberately, word by word.
+      // The last word of each sentence pauses SLNC_LINE instead, and the last
+      // word of the last sentence pauses `endPause` (section gap).
       function _pushSentences(queue, text, endPause, highlight) {
         const sentences = _splitSentences(text);
-        sentences.forEach((sentence, i) => {
-          const isLast = i === sentences.length - 1;
-          queue.push({
-            text: sentence,
-            pause: isLast ? endPause : SLNC_LINE,
-            highlight: i === 0 ? highlight : undefined,
+        let firstWordOfText = true;
+        sentences.forEach((sentence, si) => {
+          const isLastSentence = si === sentences.length - 1;
+          const words = sentence.split(/\s+/).filter(Boolean);
+          words.forEach((word, wi) => {
+            const isLastWord = wi === words.length - 1;
+            const pause = isLastWord ? (isLastSentence ? endPause : SLNC_LINE) : SLNC_WORD;
+            queue.push({
+              text: word,
+              pause,
+              highlight: firstWordOfText ? highlight : undefined,
+            });
+            firstWordOfText = false;
           });
         });
       }
