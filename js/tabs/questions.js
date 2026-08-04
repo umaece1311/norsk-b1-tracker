@@ -1,4 +1,4 @@
-e      // ─── ALL QUESTIONS ─────────────────────────────────────────────────────────────
+      // ─── ALL QUESTIONS ─────────────────────────────────────────────────────────────
       function setExamFilter(val, el) {
         state.activeExamType = val;
         document
