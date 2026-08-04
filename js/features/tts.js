@@ -20,7 +20,7 @@
       // (rate 0.55 vs the ~180wpm default) with 550ms pauses between lines and
       // 1200ms pauses between question/answer/follow-up sections.
       const SCRIPT_RATE = 0.42;
-      const SLNC_WORD = 300;
+      const SLNC_WORD = 250;
       const SLNC_WORD_REPEAT = 150;
       const SLNC_LINE = 550;
       const SLNC_SECTION = 1200;

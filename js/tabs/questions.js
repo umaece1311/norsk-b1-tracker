@@ -437,7 +437,7 @@
       // span via SpeechSynthesisUtterance.onboundary (karaoke-style).
       function pdfPlaybackScript() {
         return `
-  const SLNC_WORD = 300, SLNC_WORD_REPEAT = 150, SLNC_LINE = 550, SLNC_SECTION = 1200, RATE = 0.42;
+  const SLNC_WORD = 250, SLNC_WORD_REPEAT = 150, SLNC_LINE = 550, SLNC_SECTION = 1200, RATE = 0.42;
   let queue = [], index = 0, stopped = true, paused = false, runId = 0;
 
   function pause(ms, id) {
