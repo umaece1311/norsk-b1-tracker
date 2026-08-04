@@ -21,6 +21,7 @@
       // 1200ms pauses between question/answer/follow-up sections.
       const SCRIPT_RATE = 0.42;
       const SLNC_WORD = 300;
+      const SLNC_WORD_REPEAT = 150;
       const SLNC_LINE = 550;
       const SLNC_SECTION = 1200;
       const NUMBER_WORDS_NO = [
@@ -65,10 +66,10 @@
       }
 
       // Pushes one queue step per WORD in `text` (each word its own utterance,
-      // paused SLNC_WORD apart) so playback reads deliberately, word by word.
+      // paused `wordPause` apart) so playback reads deliberately, word by word.
       // The last word of each sentence pauses SLNC_LINE instead, and the last
       // word of the last sentence pauses `endPause` (section gap).
-      function _pushSentences(queue, text, endPause, highlight) {
+      function _pushSentences(queue, text, endPause, highlight, wordPause) {
         const sentences = _splitSentences(text);
         let firstWordOfText = true;
         sentences.forEach((sentence, si) => {
@@ -76,7 +77,7 @@
           const words = sentence.split(/\s+/).filter(Boolean);
           words.forEach((word, wi) => {
             const isLastWord = wi === words.length - 1;
-            const pause = isLastWord ? (isLastSentence ? endPause : SLNC_LINE) : SLNC_WORD;
+            const pause = isLastWord ? (isLastSentence ? endPause : SLNC_LINE) : (wordPause || SLNC_WORD);
             queue.push({
               text: word,
               pause,
@@ -128,7 +129,7 @@
             queue.push({ text: 'Svar.', pause: SLNC_LINE });
             _pushSentences(queue, answerText, SLNC_SECTION);
             queue.push({ text: 'Gjenta svaret.', pause: SLNC_LINE });
-            _pushSentences(queue, answerText, SLNC_SECTION);
+            _pushSentences(queue, answerText, SLNC_SECTION, undefined, SLNC_WORD_REPEAT);
           }
 
           const followUps = state.followUps?.[q.id] || [];
@@ -143,7 +144,7 @@
               queue.push({ text: 'Svar.', pause: SLNC_LINE });
               _pushSentences(queue, fuAnswerText, SLNC_SECTION);
               queue.push({ text: 'Gjenta.', pause: SLNC_LINE });
-              _pushSentences(queue, fuAnswerText, SLNC_SECTION);
+              _pushSentences(queue, fuAnswerText, SLNC_SECTION, undefined, SLNC_WORD_REPEAT);
             }
           });
 
@@ -220,8 +221,12 @@
         if (_scriptStopped || !_scriptQueue.length) return;
         _scriptIndex = Math.max(0, Math.min(_scriptQueue.length - 1, _scriptIndex + delta));
         _scriptRunId++;
+        const runId = _scriptRunId;
         window.speechSynthesis.cancel();
-        if (!_scriptPaused) _runScriptQueue(_scriptRunId);
+        // speak() called synchronously right after cancel() can be silently
+        // dropped in some browsers (notably Chrome) — defer to the next tick
+        // so the cancel fully completes first.
+        if (!_scriptPaused) setTimeout(() => _runScriptQueue(runId), 50);
       }
 
       function skipScriptForward() {

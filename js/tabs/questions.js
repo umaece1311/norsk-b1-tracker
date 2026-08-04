@@ -418,7 +418,7 @@
       // span via SpeechSynthesisUtterance.onboundary (karaoke-style).
       function pdfPlaybackScript() {
         return `
-  const SLNC_WORD = 300, SLNC_LINE = 550, SLNC_SECTION = 1200, RATE = 0.42;
+  const SLNC_WORD = 300, SLNC_WORD_REPEAT = 150, SLNC_LINE = 550, SLNC_SECTION = 1200, RATE = 0.42;
   let queue = [], index = 0, stopped = true, paused = false, runId = 0;
 
   function pause(ms, id) {
@@ -443,12 +443,13 @@
       const list = document.getElementById('ans-list-' + playId);
       const sentences = list ? [...list.querySelectorAll('li')] : [];
       for (let pass = 0; pass < 2 && sentences.length; pass++) {
+        const wordPause = pass === 0 ? SLNC_WORD : SLNC_WORD_REPEAT;
         sentences.forEach((li, si) => {
           const isLastSentence = si === sentences.length - 1;
           const words = [...li.querySelectorAll('.pdf-word')];
           words.forEach((wordEl, wi) => {
             const isLastWord = wi === words.length - 1;
-            const stepPause = isLastWord ? (isLastSentence ? SLNC_SECTION : SLNC_LINE) : SLNC_WORD;
+            const stepPause = isLastWord ? (isLastSentence ? SLNC_SECTION : SLNC_LINE) : wordPause;
             q.push({ playId, type: 'word', wordEl, pause: stepPause });
           });
         });
@@ -550,8 +551,11 @@
     if (stopped || !queue.length) return;
     index = Math.max(0, Math.min(queue.length - 1, index + delta));
     runId++;
+    const thisRunId = runId;
     window.speechSynthesis.cancel();
-    if (!paused) runQueue(runId);
+    // speak() called synchronously right after cancel() can be silently
+    // dropped in some browsers (notably Chrome) — defer to the next tick.
+    if (!paused) setTimeout(() => runQueue(thisRunId), 50);
   }
 `;
       }
