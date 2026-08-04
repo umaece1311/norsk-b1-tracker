@@ -280,14 +280,29 @@
         }).join('');
 
         const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+          showToast('⚠️ Popup blocked — allow popups for this site to open the PDF page.');
+          return;
+        }
         printWindow.document.write(`
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Norsk B1 — My Questions &amp; Answers</title>
 <style>
   body { font-family: 'DM Sans', Arial, sans-serif; color: #1a2235; padding: 24px 32px; max-width: 800px; margin: 0 auto; font-size: 1.05rem; }
+  @media (max-width: 600px) {
+    body { padding: 14px 16px; font-size: 1rem; }
+    h1 { font-size: 1.3rem; }
+    .pdf-toc { overflow-x: auto; }
+    .pdf-toc table { font-size: 0.85rem; }
+    .pdf-controls { position: static; gap: 8px; }
+    .pdf-controls button { flex: 1 1 auto; padding: 10px 8px; font-size: 0.85rem; min-height: 40px; }
+    .pdf-question { font-size: 1.05rem; }
+    .pdf-answer, .pdf-answer-list li { font-size: 1rem; }
+  }
   h1 { font-family: Georgia, serif; font-size: 1.7rem; margin-bottom: 4px; color: #1a2235; }
   h1 .flag { font-size: 1.4rem; }
   .pdf-meta { color: #666; font-size: 0.85rem; margin-bottom: 16px; }
@@ -367,11 +382,15 @@
   .pdf-listen-btn {
     font-size: 0.85rem; border: none; background: none; cursor: pointer;
     margin-left: 4px; vertical-align: middle; opacity: 0.7;
+    padding: 6px 8px; min-width: 32px; min-height: 32px;
   }
   .pdf-listen-btn:hover { opacity: 1; }
   .pdf-word { transition: background 0.1s; border-radius: 3px; padding: 0 1px; }
   .pdf-word.speaking { background: #fde047; }
   .pdf-item.playing, .pdf-followup-item.playing { outline: 2px solid #2563eb; outline-offset: 4px; border-radius: 8px; }
+  @media (max-width: 600px) {
+    .pdf-listen-btn { font-size: 1.1rem; }
+  }
   @media print {
     body { padding: 0; }
     .pdf-item { break-inside: avoid; }
