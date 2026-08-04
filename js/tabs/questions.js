@@ -360,8 +360,10 @@
     border-radius: 8px; padding: 8px 14px; border: none;
   }
   #pdfPlayAllBtn { background: #2563eb; color: #fff; }
-  #pdfPlayAllBtn.playing { background: #dc2626; }
+  #pdfPlayAllBtn.playing { background: #d97706; }
   #pdfPrintBtn { background: #eef2ff; color: #4338ca; }
+  #pdfStopBtn { background: #fee2e2; color: #dc2626; }
+  #pdfBackBtn, #pdfFwdBtn { background: #f3f4f6; color: #374151; }
   .pdf-listen-btn {
     font-size: 0.85rem; border: none; background: none; cursor: pointer;
     margin-left: 4px; vertical-align: middle; opacity: 0.7;
@@ -380,6 +382,9 @@
 <body>
   <div class="pdf-controls">
     <button id="pdfPlayAllBtn" onclick="pdfPlayAll()">▶ Play All</button>
+    <button id="pdfBackBtn" onclick="pdfSkip(-1)" title="Back">⏮</button>
+    <button id="pdfFwdBtn" onclick="pdfSkip(1)" title="Forward">⏭</button>
+    <button id="pdfStopBtn" onclick="pdfStop()">⏹ Stop</button>
     <button id="pdfPrintBtn" onclick="window.print()">🖨 Print / Save PDF</button>
   </div>
   <h1><span class="flag">&#127475;&#127476;</span> Norsk B1 &mdash; My Questions &amp; Answers</h1>
@@ -414,110 +419,137 @@
       function pdfPlaybackScript() {
         return `
   const SLNC_LINE = 550, SLNC_SECTION = 1200, RATE = 0.42;
-  let stopped = true;
+  let queue = [], index = 0, stopped = true, paused = false, runId = 0;
 
-  function pause(ms) { return new Promise(r => setTimeout(r, ms)); }
+  function pause(ms, id) {
+    return new Promise(resolve => setTimeout(() => resolve(id === runId), ms));
+  }
 
   function clearHighlights() {
     document.querySelectorAll('.pdf-word.speaking').forEach(el => el.classList.remove('speaking'));
     document.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
   }
 
-  function speakSentence(li) {
+  // Builds one flat, seekable queue across every question/follow-up item on
+  // the page: label steps (plain text) and sentence steps (drive per-word
+  // highlighting via onboundary).
+  function buildQueue() {
+    const q = [];
+    document.querySelectorAll('[id^="play-"]').forEach(wrap => {
+      const playId = wrap.id.replace('play-', '');
+      const qText = wrap.getAttribute('data-q');
+      if (qText) q.push({ playId, type: 'plain', text: qText, pause: SLNC_SECTION });
+
+      const list = document.getElementById('ans-list-' + playId);
+      const sentences = list ? [...list.querySelectorAll('li')] : [];
+      for (let pass = 0; pass < 2 && sentences.length; pass++) {
+        sentences.forEach((li, i) => {
+          const isLast = i === sentences.length - 1;
+          q.push({ playId, type: 'sentence', li, pause: isLast ? SLNC_SECTION : SLNC_LINE });
+        });
+      }
+    });
+    return q;
+  }
+
+  function speakStep(step, id) {
     return new Promise(resolve => {
-      const text = li.getAttribute('data-text') || li.textContent;
-      const words = [...li.querySelectorAll('.pdf-word')];
+      const text = step.type === 'sentence'
+        ? (step.li.getAttribute('data-text') || step.li.textContent)
+        : step.text;
+      const words = step.type === 'sentence' ? [...step.li.querySelectorAll('.pdf-word')] : [];
       const utt = new SpeechSynthesisUtterance(text);
       utt.lang = 'nb-NO';
       utt.rate = RATE;
-      utt.onboundary = e => {
-        if (e.name !== 'word') return;
-        words.forEach(w => w.classList.remove('speaking'));
-        const upto = text.slice(0, e.charIndex).trim();
-        const idx = upto ? upto.split(/\\s+/).length : 0;
-        if (words[idx]) words[idx].classList.add('speaking');
-      };
-      utt.onend = resolve;
-      utt.onerror = resolve;
+      if (words.length) {
+        utt.onboundary = e => {
+          if (e.name !== 'word') return;
+          words.forEach(w => w.classList.remove('speaking'));
+          const upto = text.slice(0, e.charIndex).trim();
+          const idx = upto ? upto.split(/\\s+/).length : 0;
+          if (words[idx]) words[idx].classList.add('speaking');
+        };
+      }
+      utt.onend = () => resolve(id === runId);
+      utt.onerror = () => resolve(id === runId);
       window.speechSynthesis.speak(utt);
     });
   }
 
-  function speakPlain(text) {
-    return new Promise(resolve => {
-      const utt = new SpeechSynthesisUtterance(text);
-      utt.lang = 'nb-NO';
-      utt.rate = RATE;
-      utt.onend = resolve;
-      utt.onerror = resolve;
-      window.speechSynthesis.speak(utt);
-    });
-  }
-
-  // Speaks one question card: question text, then each answer sentence with
-  // per-word highlighting, then repeats the answer once ("Gjenta svaret").
-  async function playItem(playId, opts) {
-    opts = opts || {};
+  function highlightCard(playId) {
+    clearHighlights();
     const wrap = document.getElementById('play-' + playId);
     if (!wrap) return;
-    if (!opts.chained) window.speechSynthesis.cancel();
-    clearHighlights();
     wrap.classList.add('playing');
     wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
 
-    const qText = wrap.getAttribute('data-q');
-    if (qText) {
-      await speakPlain(qText);
-      if (stopped) return;
-      await pause(SLNC_SECTION);
+  async function runQueue(id) {
+    while (index < queue.length) {
+      if (stopped || paused || id !== runId) return;
+      const step = queue[index];
+      highlightCard(step.playId);
+      const okAfterSpeak = await speakStep(step, id);
+      if (!okAfterSpeak || stopped || paused) return;
+      const okAfterPause = await pause(step.pause || SLNC_LINE, id);
+      if (!okAfterPause || stopped || paused) return;
+      index++;
     }
+    if (id === runId) pdfStop();
+  }
 
-    const list = document.getElementById('ans-list-' + playId);
-    const sentences = list ? [...list.querySelectorAll('li')] : [];
-    if (!sentences.length) { wrap.classList.remove('playing'); return; }
-
-    for (let pass = 0; pass < 2; pass++) {
-      for (const li of sentences) {
-        if (stopped) { wrap.classList.remove('playing'); return; }
-        await speakSentence(li);
-        if (stopped) { wrap.classList.remove('playing'); return; }
-        await pause(SLNC_LINE);
-      }
-      if (pass === 0) await pause(SLNC_SECTION);
+  function updateButtons() {
+    const btn = document.getElementById('pdfPlayAllBtn');
+    if (btn) {
+      btn.textContent = stopped ? '▶ Play All' : paused ? '▶ Resume' : '⏸ Pause';
+      btn.classList.toggle('playing', !stopped && !paused);
     }
-    clearHighlights();
-    wrap.classList.remove('playing');
   }
 
   function pdfPlayItem(playId) {
+    queue = buildQueue().filter(s => s.playId === playId);
+    index = 0;
     stopped = false;
-    playItem(playId);
+    paused = false;
+    runId++;
+    updateButtons();
+    window.speechSynthesis.cancel();
+    runQueue(runId);
   }
 
-  async function pdfPlayAll() {
-    const btn = document.getElementById('pdfPlayAllBtn');
+  function pdfPlayAll() {
     if (!stopped) {
-      stopped = true;
-      window.speechSynthesis.cancel();
-      clearHighlights();
-      btn.textContent = '▶ Play All';
-      btn.classList.remove('playing');
+      if (paused) { paused = false; runId++; updateButtons(); runQueue(runId); }
+      else { paused = true; runId++; window.speechSynthesis.cancel(); updateButtons(); }
       return;
     }
+    queue = buildQueue();
+    index = 0;
     stopped = false;
-    btn.textContent = '⏹ Stop';
-    btn.classList.add('playing');
+    paused = false;
+    runId++;
+    updateButtons();
+    window.speechSynthesis.cancel();
+    runQueue(runId);
+  }
 
-    const items = [...document.querySelectorAll('[id^="play-"]')];
-    for (const el of items) {
-      if (stopped) break;
-      await playItem(el.id.replace('play-', ''), { chained: true });
-      if (stopped) break;
-      await pause(SLNC_SECTION);
-    }
+  function pdfStop() {
     stopped = true;
-    btn.textContent = '▶ Play All';
-    btn.classList.remove('playing');
+    paused = false;
+    index = 0;
+    queue = [];
+    runId++;
+    window.speechSynthesis.cancel();
+    clearHighlights();
+    updateButtons();
+  }
+
+  function pdfSkip(delta) {
+    if (stopped || !queue.length) return;
+    index = Math.max(0, Math.min(queue.length - 1, index + delta));
+    runId++;
+    window.speechSynthesis.cancel();
+    if (!paused) runQueue(runId);
   }
 `;
       }

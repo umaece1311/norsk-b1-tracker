@@ -29,24 +29,29 @@
 
       let _scriptQueue = [];
       let _scriptStopped = true;
+      let _scriptPaused = false;
+      let _scriptIndex = 0;
+      let _scriptRunId = 0; // bumped on stop/skip so stale timers/utterances no-op
 
       function isScriptPlaying() {
         return !_scriptStopped;
       }
 
-      function _speakLine(text) {
+      function _speakLine(text, runId) {
         return new Promise(resolve => {
           const utt = new SpeechSynthesisUtterance(text);
           utt.lang = 'nb-NO';
           utt.rate = SCRIPT_RATE;
-          utt.onend = resolve;
-          utt.onerror = resolve;
+          utt.onend = () => resolve(runId === _scriptRunId);
+          utt.onerror = () => resolve(runId === _scriptRunId);
           window.speechSynthesis.speak(utt);
         });
       }
 
-      function _pause(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+      function _pause(ms, runId) {
+        return new Promise(resolve => {
+          setTimeout(() => resolve(runId === _scriptRunId), ms);
+        });
       }
 
       // Splits text into sentences so each one gets its own SLNC_LINE pause,
@@ -72,15 +77,18 @@
         });
       }
 
-      async function _runScriptQueue() {
-        for (const step of _scriptQueue) {
-          if (_scriptStopped) return;
+      async function _runScriptQueue(runId) {
+        while (_scriptIndex < _scriptQueue.length) {
+          if (_scriptStopped || _scriptPaused || runId !== _scriptRunId) return;
+          const step = _scriptQueue[_scriptIndex];
           if (step.highlight) _highlightScriptCard(step.highlight);
-          await _speakLine(step.text);
-          if (_scriptStopped) return;
-          await _pause(step.pause || SLNC_LINE);
+          const okAfterSpeak = await _speakLine(step.text, runId);
+          if (!okAfterSpeak || _scriptStopped || _scriptPaused) return;
+          const okAfterPause = await _pause(step.pause || SLNC_LINE, runId);
+          if (!okAfterPause || _scriptStopped || _scriptPaused) return;
+          _scriptIndex++;
         }
-        stopFullScript();
+        if (runId === _scriptRunId) stopFullScript();
       }
 
       function _highlightScriptCard(id) {
@@ -138,7 +146,7 @@
       // tab: category / exam type / status / search) as one continuous script.
       function playFullScript() {
         if (!_scriptStopped) {
-          stopFullScript();
+          if (_scriptPaused) resumeFullScript();
           return;
         }
 
@@ -158,14 +166,36 @@
 
         window.speechSynthesis.cancel();
         _scriptQueue = _buildScriptQueue(qs);
+        _scriptIndex = 0;
         _scriptStopped = false;
+        _scriptPaused = false;
+        _scriptRunId++;
         _updatePlayScriptButton();
-        _runScriptQueue();
+        _runScriptQueue(_scriptRunId);
+      }
+
+      function pauseFullScript() {
+        if (_scriptStopped || _scriptPaused) return;
+        _scriptPaused = true;
+        _scriptRunId++; // invalidates in-flight speak/pause promises
+        window.speechSynthesis.cancel();
+        _updatePlayScriptButton();
+      }
+
+      function resumeFullScript() {
+        if (_scriptStopped || !_scriptPaused) return;
+        _scriptPaused = false;
+        _scriptRunId++;
+        _updatePlayScriptButton();
+        _runScriptQueue(_scriptRunId);
       }
 
       function stopFullScript() {
         _scriptStopped = true;
+        _scriptPaused = false;
+        _scriptIndex = 0;
         _scriptQueue = [];
+        _scriptRunId++;
         window.speechSynthesis.cancel();
         document.querySelectorAll('.card.script-playing').forEach(el =>
           el.classList.remove('script-playing')
@@ -173,11 +203,32 @@
         _updatePlayScriptButton();
       }
 
+      // Jumps forward/backward by one queue step (roughly one sentence/label) and
+      // keeps playing from there — works whether currently playing or paused.
+      function _seekScript(delta) {
+        if (_scriptStopped || !_scriptQueue.length) return;
+        _scriptIndex = Math.max(0, Math.min(_scriptQueue.length - 1, _scriptIndex + delta));
+        _scriptRunId++;
+        window.speechSynthesis.cancel();
+        if (!_scriptPaused) _runScriptQueue(_scriptRunId);
+      }
+
+      function skipScriptForward() {
+        _seekScript(1);
+      }
+
+      function skipScriptBackward() {
+        _seekScript(-1);
+      }
+
       function _updatePlayScriptButton() {
         const btn = document.getElementById('playScriptBtn');
-        if (!btn) return;
-        btn.textContent = _scriptStopped ? '▶ Play Full Script' : '⏹ Stop';
-        btn.classList.toggle('btn-primary', _scriptStopped);
-        btn.classList.toggle('btn-danger', !_scriptStopped);
+        if (btn) {
+          btn.textContent = _scriptStopped ? '▶ Play' : _scriptPaused ? '▶ Resume' : '⏸ Pause';
+          btn.classList.toggle('btn-primary', _scriptStopped || _scriptPaused);
+          btn.classList.toggle('btn-danger', !_scriptStopped && !_scriptPaused);
+        }
+        const controls = document.getElementById('scriptControls');
+        if (controls) controls.classList.toggle('hidden', _scriptStopped);
       }
 

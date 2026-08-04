@@ -285,8 +285,13 @@
                 oninput="renderQuestions()"
               />
               <button class="btn btn-primary" id="playScriptBtn" onclick="playFullScript()">
-                &#9654; Play Full Script
+                &#9654; Play
               </button>
+              <span id="scriptControls" class="hidden" style="display:inline-flex;gap:6px">
+                <button class="btn btn-gray" onclick="skipScriptBackward()" title="Back">&#9198;</button>
+                <button class="btn btn-gray" onclick="skipScriptForward()" title="Forward">&#9197;</button>
+                <button class="btn btn-danger" onclick="stopFullScript()" title="Stop">&#9209; Stop</button>
+              </span>
               <button class="btn btn-primary" id="downloadMp3Btn" onclick="downloadFullScriptMp3()">
                 &#127911; Download Full MP3
               </button>
