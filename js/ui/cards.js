@@ -52,6 +52,7 @@
       <button class="btn btn-ghost" onclick="toggleTransPanel(${q.id})">🌐 Translate</button>
       <button class="btn btn-ghost" onclick="speakText(${q.id},'q')">🔊 Question</button>
       <button class="btn btn-ghost" onclick="speakText(${q.id},'a')">🔊 Answer</button>
+      <button class="btn btn-ghost" onclick="downloadQuestionMp3(${q.id})">🎧 MP3</button>
       <button class="btn btn-green" onclick="togglePronunciation(${q.id})">🎤 Pronunciation</button>
       ${opts.showTimer ? `<button class="btn btn-gray" onclick="toggleCardTimer(${q.id},'${q.examType || 'A'}')">⏱ Timer</button>` : ''}
       <button class="btn ${state.reviewMarked[q.id] ? 'btn-review-active' : 'btn-gray'}" id="reviewBtn-${q.id}" onclick="toggleReview(${q.id})">

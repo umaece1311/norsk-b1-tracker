@@ -406,6 +406,9 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         margin-bottom: 14px;
       }
+      .card.script-playing {
+        box-shadow: 0 0 0 3px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.25);
+      }
       @media (max-width: 768px) {
         .card { padding: 14px 12px; border-radius: 12px; }
       }

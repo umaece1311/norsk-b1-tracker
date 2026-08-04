@@ -13,6 +13,8 @@
       function openApiModal() {
         document.getElementById('apiModal').classList.remove('hidden');
         document.getElementById('apiKeyInput').value = state.apiKey || '';
+        const elInput = document.getElementById('googleTtsKeyInput');
+        if (elInput) elInput.value = state.googleTtsKey || '';
       }
       function closeApiModal() {
         document.getElementById('apiModal').classList.add('hidden');
@@ -45,6 +47,26 @@
         updateAiKeyIndicator();
         closeApiModal();
         showToast('🗑 API key removed. Free features still work perfectly.');
+      }
+
+      function saveGoogleTtsKey() {
+        const input = document.getElementById('googleTtsKeyInput');
+        if (!input) return;
+        state.googleTtsKey = input.value.trim();
+        localStorage.setItem('norsk-b1-google-tts-key', state.googleTtsKey);
+        showToast(
+          state.googleTtsKey
+            ? '✅ Google TTS key saved! MP3 export is now enabled.'
+            : '✅ No Google TTS key set — MP3 export disabled.'
+        );
+      }
+
+      function clearGoogleTtsKey() {
+        state.googleTtsKey = '';
+        localStorage.removeItem('norsk-b1-google-tts-key');
+        const input = document.getElementById('googleTtsKeyInput');
+        if (input) input.value = '';
+        showToast('🗑 Google TTS key removed.');
       }
 
       // Click outside modal to close

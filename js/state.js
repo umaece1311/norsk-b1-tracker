@@ -7,6 +7,7 @@
         customQs: [],
         followUps: {}, // mainQuestionId -> [{ q, a }, ...]
         apiKey: '',
+        googleTtsKey: '',
         todayIds: [],
         activeCat: 'all',
         activeExamType: 'all',
@@ -25,12 +26,14 @@
             state = { ...state, ...parsed };
           }
           state.apiKey = localStorage.getItem('norsk-b1-apikey') || '';
+          state.googleTtsKey = localStorage.getItem('norsk-b1-google-tts-key') || '';
         } catch (e) {}
       }
 
       function saveState() {
         const toSave = { ...state };
         delete toSave.apiKey;
+        delete toSave.googleTtsKey;
         localStorage.setItem('norsk-b1-state', JSON.stringify(toSave));
       }
 

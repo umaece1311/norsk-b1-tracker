@@ -283,6 +283,12 @@
                 placeholder="&#128269; Search questions&hellip;"
                 oninput="renderQuestions()"
               />
+              <button class="btn btn-primary" id="playScriptBtn" onclick="playFullScript()">
+                &#9654; Play Full Script
+              </button>
+              <button class="btn btn-primary" id="downloadMp3Btn" onclick="downloadFullScriptMp3()">
+                &#127911; Download Full MP3
+              </button>
               <button class="btn btn-primary" onclick="downloadQuestionsPdf()">
                 &#128190; Download PDF (Q&amp;A)
               </button>
@@ -855,7 +861,7 @@
         <p style="font-size: 0.74rem; color: #9ca3af; margin: 6px 0 12px">
           Get free key: <strong>console.groq.com</strong> &rarr; API Keys &rarr; Create API Key. 100% free, no credit card. Stored only in your browser.
         </p>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px">
           <button class="btn btn-primary" onclick="saveApiKey()">
             &#128190; Save Key
           </button>
@@ -863,6 +869,35 @@
             &#10005; Close (use free features)
           </button>
           <button class="btn btn-danger" onclick="clearApiKey()">
+            &#128465; Remove Key
+          </button>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 0 0 16px" />
+
+        <label
+          style="
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #374151;
+            display: block;
+            margin-bottom: 5px;
+          "
+          >Google Cloud TTS API Key (optional &mdash; enables MP3 download, free up to 4M chars/month):</label
+        >
+        <input
+          type="password"
+          id="googleTtsKeyInput"
+          placeholder="AIza&hellip; (get at console.cloud.google.com)"
+        />
+        <p style="font-size: 0.74rem; color: #9ca3af; margin: 6px 0 12px">
+          Get a free key at <strong>console.cloud.google.com</strong> &rarr; enable &ldquo;Cloud Text-to-Speech API&rdquo; &rarr; Credentials &rarr; Create API Key. Standard voices are free for 4 million characters/month. Used to generate downloadable MP3 audio for questions &amp; answers. Stored only in your browser.
+        </p>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          <button class="btn btn-primary" onclick="saveGoogleTtsKey()">
+            &#128190; Save Key
+          </button>
+          <button class="btn btn-danger" onclick="clearGoogleTtsKey()">
             &#128465; Remove Key
           </button>
         </div>
@@ -883,6 +918,7 @@
     <!-- Features -->
     <script src="js/features/audio-devices.js"></script>
     <script src="js/features/tts.js"></script>
+    <script src="js/features/mp3-export.js"></script>
     <script src="js/features/translation.js"></script>
     <script src="js/features/pronunciation.js"></script>
     <script src="js/features/card-vocab.js"></script>

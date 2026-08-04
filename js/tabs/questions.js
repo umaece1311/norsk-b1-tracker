@@ -1,4 +1,4 @@
-      // ─── ALL QUESTIONS ─────────────────────────────────────────────────────────────
+e      // ─── ALL QUESTIONS ─────────────────────────────────────────────────────────────
       function setExamFilter(val, el) {
         state.activeExamType = val;
         document
@@ -200,14 +200,24 @@
         }
 
         // ── Answer text -> bullet-point <li> markup ────────────────────────────────
-        function answerBulletsHTML(answerText) {
+        // Each <li> gets a data-sentence index and each word its own <span> so the
+        // playback script can highlight along as speechSynthesis speaks it.
+        function answerBulletsHTML(answerText, playId) {
           if (!answerText) return '<span class="pdf-noanswer">✏️ Not answered yet &mdash; give it a try today!</span>';
-          return '<ul class="pdf-answer-list">' +
-            answerText
-              .split(/(?<=[.!?])\s+/)
-              .map(s => s.trim())
-              .filter(Boolean)
-              .map(s => `<li>${escapeHtml(s)}</li>`)
+          const sentences = answerText
+            .split(/(?<=[.!?])\s+/)
+            .map(s => s.trim())
+            .filter(Boolean);
+          return `<ul class="pdf-answer-list" id="ans-list-${playId}">` +
+            sentences
+              .map((s, si) => {
+                const wordsHTML = s
+                  .split(/\s+/)
+                  .filter(Boolean)
+                  .map((w, wi) => `<span class="pdf-word" data-s="${si}" data-w="${wi}">${escapeHtml(w)}</span>`)
+                  .join(' ');
+                return `<li data-sentence="${si}" data-text="${escapeHtml(s)}">${wordsHTML}</li>`;
+              })
               .join('') +
             '</ul>';
         }
@@ -222,9 +232,11 @@
             const fuId = `${q.id}-f${i}`;
             const myAnswer = state.answers[fuId]?.trim();
             return `
-          <div class="pdf-followup-item">
-            <div class="pdf-followup-q">🔁 ${escapeHtml(fu.q)}</div>
-            <div class="pdf-answer ${myAnswer ? 'pdf-answer-done' : 'pdf-answer-empty'}">${answerBulletsHTML(myAnswer)}</div>
+          <div class="pdf-followup-item" id="play-${fuId}" data-q="${escapeHtml(fu.q)}">
+            <div class="pdf-followup-q">🔁 ${escapeHtml(fu.q)}
+              <button class="pdf-listen-btn" onclick="pdfPlayItem('${fuId}')" title="Listen">🔊</button>
+            </div>
+            <div class="pdf-answer ${myAnswer ? 'pdf-answer-done' : 'pdf-answer-empty'}">${answerBulletsHTML(myAnswer, fuId)}</div>
           </div>`;
           }).join('')}
         </div>`;
@@ -242,9 +254,12 @@
             const itemsHTML = typeQs.map(q => {
               const myAnswer = state.answers[q.id]?.trim();
               return `
-      <div class="pdf-item" id="q-${q.id}">
-        <div class="pdf-question"><span class="pdf-qnum">${q.id}</span> ${escapeHtml(q.q)}</div>
-        <div class="pdf-answer ${myAnswer ? 'pdf-answer-done' : 'pdf-answer-empty'}">${answerBulletsHTML(myAnswer)}</div>
+      <div class="pdf-item" id="play-${q.id}" data-q="${escapeHtml(q.q)}">
+        <div class="pdf-question" id="q-${q.id}">
+          <span class="pdf-qnum">${q.id}</span> ${escapeHtml(q.q)}
+          <button class="pdf-listen-btn" onclick="pdfPlayItem('${q.id}')" title="Listen">🔊</button>
+        </div>
+        <div class="pdf-answer ${myAnswer ? 'pdf-answer-done' : 'pdf-answer-empty'}">${answerBulletsHTML(myAnswer, q.id)}</div>
         ${vocabHTMLFor(q)}
         ${followUpsHTMLFor(q)}
       </div>`;
@@ -335,13 +350,38 @@
     margin-top: 30px; padding-top: 16px; border-top: 2px dashed #93c5fd;
     text-align: center; font-weight: 700; color: #7c3aed; font-size: 0.95rem;
   }
+  .pdf-controls {
+    position: sticky; top: 0; z-index: 10; display: flex; gap: 10px; flex-wrap: wrap;
+    align-items: center; background: #fff; padding: 10px 0; margin-bottom: 10px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .pdf-controls button {
+    font-family: inherit; font-weight: 700; font-size: 0.9rem; cursor: pointer;
+    border-radius: 8px; padding: 8px 14px; border: none;
+  }
+  #pdfPlayAllBtn { background: #2563eb; color: #fff; }
+  #pdfPlayAllBtn.playing { background: #dc2626; }
+  #pdfPrintBtn { background: #eef2ff; color: #4338ca; }
+  .pdf-listen-btn {
+    font-size: 0.85rem; border: none; background: none; cursor: pointer;
+    margin-left: 4px; vertical-align: middle; opacity: 0.7;
+  }
+  .pdf-listen-btn:hover { opacity: 1; }
+  .pdf-word { transition: background 0.1s; border-radius: 3px; padding: 0 1px; }
+  .pdf-word.speaking { background: #fde047; }
+  .pdf-item.playing, .pdf-followup-item.playing { outline: 2px solid #2563eb; outline-offset: 4px; border-radius: 8px; }
   @media print {
     body { padding: 0; }
     .pdf-item { break-inside: avoid; }
+    .pdf-controls, .pdf-listen-btn { display: none; }
   }
 </style>
 </head>
 <body>
+  <div class="pdf-controls">
+    <button id="pdfPlayAllBtn" onclick="pdfPlayAll()">▶ Play All</button>
+    <button id="pdfPrintBtn" onclick="window.print()">🖨 Print / Save PDF</button>
+  </div>
   <h1><span class="flag">&#127475;&#127476;</span> Norsk B1 &mdash; My Questions &amp; Answers</h1>
   <div class="pdf-meta">${escapeHtml(title)} &middot; Exported ${new Date().toLocaleDateString()}</div>
   <div class="pdf-motivation">${motivation}</div>
@@ -362,9 +402,123 @@
   ${sectionsHTML}
 
   <div class="pdf-footer">Du klarer dette! Keep practicing every day &mdash; lykke til p&aring; eksamen! 🎉</div>
-  <script>window.onload = () => setTimeout(() => window.print(), 200);</script>
+  <script>${pdfPlaybackScript()}</script>
 </body>
 </html>`);
         printWindow.document.close();
+      }
+
+      // ── Playback engine injected into the PDF-preview window ──────────────────
+      // Speaks each question + its answer sentences, highlighting the current word
+      // span via SpeechSynthesisUtterance.onboundary (karaoke-style).
+      function pdfPlaybackScript() {
+        return `
+  const SLNC_LINE = 550, SLNC_SECTION = 1200, RATE = 0.42;
+  let stopped = true;
+
+  function pause(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function clearHighlights() {
+    document.querySelectorAll('.pdf-word.speaking').forEach(el => el.classList.remove('speaking'));
+    document.querySelectorAll('.playing').forEach(el => el.classList.remove('playing'));
+  }
+
+  function speakSentence(li) {
+    return new Promise(resolve => {
+      const text = li.getAttribute('data-text') || li.textContent;
+      const words = [...li.querySelectorAll('.pdf-word')];
+      const utt = new SpeechSynthesisUtterance(text);
+      utt.lang = 'nb-NO';
+      utt.rate = RATE;
+      utt.onboundary = e => {
+        if (e.name !== 'word') return;
+        words.forEach(w => w.classList.remove('speaking'));
+        const upto = text.slice(0, e.charIndex).trim();
+        const idx = upto ? upto.split(/\\s+/).length : 0;
+        if (words[idx]) words[idx].classList.add('speaking');
+      };
+      utt.onend = resolve;
+      utt.onerror = resolve;
+      window.speechSynthesis.speak(utt);
+    });
+  }
+
+  function speakPlain(text) {
+    return new Promise(resolve => {
+      const utt = new SpeechSynthesisUtterance(text);
+      utt.lang = 'nb-NO';
+      utt.rate = RATE;
+      utt.onend = resolve;
+      utt.onerror = resolve;
+      window.speechSynthesis.speak(utt);
+    });
+  }
+
+  // Speaks one question card: question text, then each answer sentence with
+  // per-word highlighting, then repeats the answer once ("Gjenta svaret").
+  async function playItem(playId, opts) {
+    opts = opts || {};
+    const wrap = document.getElementById('play-' + playId);
+    if (!wrap) return;
+    if (!opts.chained) window.speechSynthesis.cancel();
+    clearHighlights();
+    wrap.classList.add('playing');
+    wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    const qText = wrap.getAttribute('data-q');
+    if (qText) {
+      await speakPlain(qText);
+      if (stopped) return;
+      await pause(SLNC_SECTION);
+    }
+
+    const list = document.getElementById('ans-list-' + playId);
+    const sentences = list ? [...list.querySelectorAll('li')] : [];
+    if (!sentences.length) { wrap.classList.remove('playing'); return; }
+
+    for (let pass = 0; pass < 2; pass++) {
+      for (const li of sentences) {
+        if (stopped) { wrap.classList.remove('playing'); return; }
+        await speakSentence(li);
+        if (stopped) { wrap.classList.remove('playing'); return; }
+        await pause(SLNC_LINE);
+      }
+      if (pass === 0) await pause(SLNC_SECTION);
+    }
+    clearHighlights();
+    wrap.classList.remove('playing');
+  }
+
+  function pdfPlayItem(playId) {
+    stopped = false;
+    playItem(playId);
+  }
+
+  async function pdfPlayAll() {
+    const btn = document.getElementById('pdfPlayAllBtn');
+    if (!stopped) {
+      stopped = true;
+      window.speechSynthesis.cancel();
+      clearHighlights();
+      btn.textContent = '▶ Play All';
+      btn.classList.remove('playing');
+      return;
+    }
+    stopped = false;
+    btn.textContent = '⏹ Stop';
+    btn.classList.add('playing');
+
+    const items = [...document.querySelectorAll('[id^="play-"]')];
+    for (const el of items) {
+      if (stopped) break;
+      await playItem(el.id.replace('play-', ''), { chained: true });
+      if (stopped) break;
+      await pause(SLNC_SECTION);
+    }
+    stopped = true;
+    btn.textContent = '▶ Play All';
+    btn.classList.remove('playing');
+  }
+`;
       }
 
