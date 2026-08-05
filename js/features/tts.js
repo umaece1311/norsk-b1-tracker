@@ -93,6 +93,7 @@
           if (_scriptStopped || _scriptPaused || runId !== _scriptRunId) return;
           const step = _scriptQueue[_scriptIndex];
           if (step.highlight) _highlightScriptCard(step.highlight);
+          _updateSeekBar();
           const okAfterSpeak = await _speakLine(step.text, runId);
           if (!okAfterSpeak || _scriptStopped || _scriptPaused) return;
           const okAfterPause = await _pause(step.pause || SLNC_LINE, runId);
@@ -183,6 +184,7 @@
         _scriptPaused = false;
         _scriptRunId++;
         _updatePlayScriptButton();
+        _updateSeekBar();
         _runScriptQueue(_scriptRunId);
       }
 
@@ -213,28 +215,40 @@
           el.classList.remove('script-playing')
         );
         _updatePlayScriptButton();
+        _updateSeekBar();
       }
 
-      // Jumps forward/backward by one queue step (roughly one sentence/label) and
+      // Jumps to an exact queue index (from dragging/clicking the seek bar) and
       // keeps playing from there — works whether currently playing or paused.
-      function _seekScript(delta) {
+      function seekScriptTo(newIndex) {
         if (_scriptStopped || !_scriptQueue.length) return;
-        _scriptIndex = Math.max(0, Math.min(_scriptQueue.length - 1, _scriptIndex + delta));
+        _scriptIndex = Math.max(0, Math.min(_scriptQueue.length - 1, +newIndex));
         _scriptRunId++;
         const runId = _scriptRunId;
         window.speechSynthesis.cancel();
+        _updateSeekBar();
         // speak() called synchronously right after cancel() can be silently
         // dropped in some browsers (notably Chrome) — defer to the next tick
         // so the cancel fully completes first.
         if (!_scriptPaused) setTimeout(() => _runScriptQueue(runId), 50);
       }
 
-      function skipScriptForward() {
-        _seekScript(1);
+      // Updates only the seek bar's displayed value/label while dragging,
+      // without interrupting playback — the actual jump happens on release
+      // (oninput vs onchange on the <input type="range">).
+      function seekScriptPreview(previewIndex) {
+        const label = document.getElementById('scriptSeekLabel');
+        if (label) label.textContent = `${+previewIndex + 1} / ${_scriptQueue.length}`;
       }
 
-      function skipScriptBackward() {
-        _seekScript(-1);
+      function _updateSeekBar() {
+        const bar = document.getElementById('scriptSeekBar');
+        const label = document.getElementById('scriptSeekLabel');
+        if (bar) {
+          bar.max = Math.max(0, _scriptQueue.length - 1);
+          bar.value = _scriptIndex;
+        }
+        if (label) label.textContent = `${_scriptQueue.length ? _scriptIndex + 1 : 0} / ${_scriptQueue.length}`;
       }
 
       function _updatePlayScriptButton() {

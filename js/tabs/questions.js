@@ -378,7 +378,10 @@
   #pdfPlayAllBtn.playing { background: #d97706; }
   #pdfPrintBtn { background: #eef2ff; color: #4338ca; }
   #pdfStopBtn { background: #fee2e2; color: #dc2626; }
-  #pdfBackBtn, #pdfFwdBtn { background: #f3f4f6; color: #374151; }
+  .pdf-seek-row { display: flex; align-items: center; gap: 10px; margin: -4px 0 14px; }
+  .pdf-seek-row input[type="range"] { flex: 1; }
+  .pdf-seek-row span { font-size: 0.78rem; color: #888; white-space: nowrap; min-width: 70px; text-align: right; }
+  .pdf-seek-row.hidden { display: none; }
   .pdf-listen-btn {
     font-size: 0.85rem; border: none; background: none; cursor: pointer;
     margin-left: 4px; vertical-align: middle; opacity: 0.7;
@@ -401,10 +404,13 @@
 <body>
   <div class="pdf-controls">
     <button id="pdfPlayAllBtn" onclick="pdfPlayAll()">▶ Play All</button>
-    <button id="pdfBackBtn" onclick="pdfSkip(-1)" title="Back">⏮</button>
-    <button id="pdfFwdBtn" onclick="pdfSkip(1)" title="Forward">⏭</button>
     <button id="pdfStopBtn" onclick="pdfStop()">⏹ Stop</button>
     <button id="pdfPrintBtn" onclick="window.print()">🖨 Print / Save PDF</button>
+  </div>
+  <div id="pdfSeekRow" class="pdf-seek-row hidden">
+    <input type="range" id="pdfSeekBar" min="0" max="0" value="0"
+      oninput="pdfSeekPreview(this.value)" onchange="pdfSeekTo(this.value)">
+    <span id="pdfSeekLabel">0 / 0</span>
   </div>
   <h1><span class="flag">&#127475;&#127476;</span> Norsk B1 &mdash; My Questions &amp; Answers</h1>
   <div class="pdf-meta">${escapeHtml(title)} &middot; Exported ${new Date().toLocaleDateString()}</div>
@@ -510,6 +516,7 @@
       if (stopped || paused || id !== runId) return;
       const step = queue[index];
       highlightCard(step.playId);
+      updateSeekBar();
       const okAfterSpeak = await speakStep(step, id);
       if (!okAfterSpeak || stopped || paused) return;
       const okAfterPause = await pause(step.pause || SLNC_LINE, id);
@@ -525,6 +532,37 @@
       btn.textContent = stopped ? '▶ Play All' : paused ? '▶ Resume' : '⏸ Pause';
       btn.classList.toggle('playing', !stopped && !paused);
     }
+    const seekRow = document.getElementById('pdfSeekRow');
+    if (seekRow) seekRow.classList.toggle('hidden', stopped);
+  }
+
+  function updateSeekBar() {
+    const bar = document.getElementById('pdfSeekBar');
+    const label = document.getElementById('pdfSeekLabel');
+    if (bar) {
+      bar.max = Math.max(0, queue.length - 1);
+      bar.value = index;
+    }
+    if (label) label.textContent = (queue.length ? index + 1 : 0) + ' / ' + queue.length;
+  }
+
+  // Updates only the seek bar's displayed label while dragging, without
+  // interrupting playback — the actual jump happens on release.
+  function pdfSeekPreview(previewIndex) {
+    const label = document.getElementById('pdfSeekLabel');
+    if (label) label.textContent = (+previewIndex + 1) + ' / ' + queue.length;
+  }
+
+  function pdfSeekTo(newIndex) {
+    if (stopped || !queue.length) return;
+    index = Math.max(0, Math.min(queue.length - 1, +newIndex));
+    runId++;
+    const thisRunId = runId;
+    window.speechSynthesis.cancel();
+    updateSeekBar();
+    // speak() called synchronously right after cancel() can be silently
+    // dropped in some browsers (notably Chrome) — defer to the next tick.
+    if (!paused) setTimeout(() => runQueue(thisRunId), 50);
   }
 
   function pdfPlayItem(playId) {
@@ -534,6 +572,7 @@
     paused = false;
     runId++;
     updateButtons();
+    updateSeekBar();
     window.speechSynthesis.cancel();
     runQueue(runId);
   }
@@ -550,6 +589,7 @@
     paused = false;
     runId++;
     updateButtons();
+    updateSeekBar();
     window.speechSynthesis.cancel();
     runQueue(runId);
   }
@@ -564,17 +604,7 @@
     window.speechSynthesis.cancel();
     clearHighlights();
     updateButtons();
-  }
-
-  function pdfSkip(delta) {
-    if (stopped || !queue.length) return;
-    index = Math.max(0, Math.min(queue.length - 1, index + delta));
-    runId++;
-    const thisRunId = runId;
-    window.speechSynthesis.cancel();
-    // speak() called synchronously right after cancel() can be silently
-    // dropped in some browsers (notably Chrome) — defer to the next tick.
-    if (!paused) setTimeout(() => runQueue(thisRunId), 50);
+    updateSeekBar();
   }
 `;
       }
