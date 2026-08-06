@@ -4,6 +4,7 @@
         status: {}, // id -> 'new'|'learning'|'done'
         timestamps: {}, // id -> ISO date string
         reviewMarked: {}, // id -> true (marked for review)
+        favourites: {}, // id -> true (marked as favourite)
         customQs: [],
         followUps: {}, // mainQuestionId -> [{ q, a }, ...]
         apiKey: '',

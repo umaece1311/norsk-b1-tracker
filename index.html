@@ -182,6 +182,14 @@
           </button>
           <button
             class="sidebar-nav-btn"
+            data-tab="favourites"
+            onclick="showTab('favourites')"
+          >
+            &#11088; Favourites
+            <span class="nav-badge" id="badge-favourites"></span>
+          </button>
+          <button
+            class="sidebar-nav-btn"
             data-tab="progress"
             onclick="showTab('progress')"
           >
@@ -666,6 +674,37 @@
             <div id="reviewList"></div>
           </div>
 
+          <!-- FAVOURITES TAB -->
+          <div id="tab-favourites" class="hidden">
+            <div class="tab-header-row">
+              <h2 style="font-size: 1.4rem">&#11088; Favourites</h2>
+            </div>
+            <div id="favouritesControls" class="hidden" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+              <button class="btn btn-primary" id="favPlayScriptBtn" onclick="playFavouritesScript()">
+                &#9654; Play All
+              </button>
+              <button class="btn btn-primary" onclick="downloadFavouritesPdf()">
+                &#128190; Download PDF (Q&amp;A)
+              </button>
+              <button class="btn btn-gray" onclick="clearAllFavourites()">&#128465; Clear All</button>
+            </div>
+            <div id="favScriptControls" class="hidden" style="display:flex;align-items:center;gap:10px;margin:-2px 0 12px">
+              <input
+                type="range"
+                id="favScriptSeekBar"
+                min="0"
+                max="0"
+                value="0"
+                style="flex:1"
+                oninput="seekScriptPreview(this.value,'favScriptSeekLabel')"
+                onchange="seekScriptTo(this.value)"
+              />
+              <span id="favScriptSeekLabel" style="font-size:0.78rem;color:#888;white-space:nowrap;min-width:70px;text-align:right">0 / 0</span>
+              <button class="btn btn-danger" onclick="stopFullScript()" title="Stop">&#9209; Stop</button>
+            </div>
+            <div id="favouritesList"></div>
+          </div>
+
           <!-- PROGRESS TAB -->
           <div id="tab-progress" class="hidden">
             <h2 style="font-size: 1.5rem; margin-bottom: 20px">
@@ -788,6 +827,10 @@
         <button class="mobile-more-btn" data-tab="review" onclick="showTab('review');closeMoreDrawer()">
           &#128257; Weekly Review
           <span id="mnav-badge-review-more" style="margin-left:auto;background:#ef4444;color:#fff;font-size:0.7rem;font-weight:700;border-radius:20px;padding:1px 7px;display:none"></span>
+        </button>
+        <button class="mobile-more-btn" data-tab="favourites" onclick="showTab('favourites');closeMoreDrawer()">
+          &#11088; Favourites
+          <span id="mnav-badge-favourites-more" style="margin-left:auto;background:#ef4444;color:#fff;font-size:0.7rem;font-weight:700;border-radius:20px;padding:1px 7px;display:none"></span>
         </button>
         <button class="mobile-more-btn" data-tab="progress" onclick="showTab('progress');closeMoreDrawer()">&#128202; Progress</button>
         <button class="mobile-more-btn" data-tab="examguide" onclick="showTab('examguide');closeMoreDrawer()">&#127891; Exam Guide</button>
@@ -946,6 +989,7 @@
     <script src="js/tabs/simulation.js"></script>
     <script src="js/tabs/study.js"></script>
     <script src="js/tabs/review.js"></script>
+    <script src="js/tabs/favourites.js"></script>
     <script src="js/tabs/progress.js"></script>
     <script src="js/tabs/add.js"></script>
     <script src="js/tabs/vocabulary.js"></script>

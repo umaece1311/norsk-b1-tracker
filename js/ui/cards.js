@@ -26,6 +26,9 @@
         </div>
         <div class="q-text">${q.q}</div>
       </div>
+      <button class="btn-favourite-star ${state.favourites[q.id] ? 'active' : ''}" id="favBtn-${q.id}" onclick="toggleFavourite(${q.id})" title="${state.favourites[q.id] ? 'Remove from Favourites' : 'Add to Favourites'}">
+        ${state.favourites[q.id] ? '⭐' : '☆'}
+      </button>
     </div>
 
     <div class="status-row">

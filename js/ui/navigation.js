@@ -8,24 +8,29 @@
           'examguide',
           'study',
           'review',
+          'favourites',
           'progress',
           'vocab',
           'add',
         ].forEach(t => {
           document.getElementById('tab-' + t).classList.add('hidden');
         });
-        // today.js and questions.js both render question cards with the same
-        // id="card-N"/id="trans-N" for shared question ids. Clear the container
-        // of whichever of these tabs isn't the one being shown, so at most one
-        // copy of any card id exists in the DOM — otherwise getElementById()
-        // inside card action handlers (Translate/Pronunciation) can silently
-        // resolve to a hidden, zero-size duplicate from the other tab.
+        // today.js, questions.js, and favourites.js all render question cards with
+        // the same id="card-N"/id="trans-N" for shared question ids. Clear the
+        // container of whichever of these tabs isn't the one being shown, so at
+        // most one copy of any card id exists in the DOM — otherwise
+        // getElementById() inside card action handlers (Translate/Pronunciation)
+        // can silently resolve to a hidden, zero-size duplicate from another tab.
         if (tab !== 'today') {
           const el = document.getElementById('todayCards');
           if (el) el.innerHTML = '';
         }
         if (tab !== 'questions') {
           const el = document.getElementById('questionsList');
+          if (el) el.innerHTML = '';
+        }
+        if (tab !== 'favourites') {
+          const el = document.getElementById('favouritesList');
           if (el) el.innerHTML = '';
         }
         document.getElementById('tab-' + tab).classList.remove('hidden');
@@ -44,6 +49,7 @@
         if (tab === 'today') renderToday();
         if (tab === 'questions') renderQuestions();
         if (tab === 'review') renderReview();
+        if (tab === 'favourites') renderFavourites();
         if (tab === 'progress') renderProgress();
         if (tab === 'study') renderStudy();
         if (tab === 'vocab') renderVocab();
@@ -149,17 +155,22 @@
             state.timestamps[q.id] >= oneWeekAgo &&
             state.answers[q.id]?.trim()
         ).length;
+        const favouriteCount = Object.keys(state.favourites || {}).length;
 
         // Update nav badges (sidebar + mobile)
         const bq = document.getElementById('badge-questions');
         if (bq) bq.textContent = total;
         const br = document.getElementById('badge-review');
         if (br) br.textContent = reviewCount || '';
+        const bf = document.getElementById('badge-favourites');
+        if (bf) bf.textContent = favouriteCount || '';
         // Mobile nav badges
         const mbq = document.getElementById('mnav-badge-questions');
         if (mbq) { mbq.textContent = total; mbq.classList.toggle('hidden', !total); }
         const mbrMore = document.getElementById('mnav-badge-review-more');
         if (mbrMore) { mbrMore.textContent = reviewCount; mbrMore.style.display = reviewCount ? '' : 'none'; }
+        const mbfMore = document.getElementById('mnav-badge-favourites-more');
+        if (mbfMore) { mbfMore.textContent = favouriteCount; mbfMore.style.display = favouriteCount ? '' : 'none'; }
         // Sync admin button visibility in more drawer
         const adminBtn = document.getElementById('adminNavBtn');
         const moreAdminBtn = document.getElementById('moreAdminBtn');

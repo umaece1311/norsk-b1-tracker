@@ -156,24 +156,31 @@
 
       // Plays the currently-filtered question list (same filters as the Questions
       // tab: category / exam type / status / search) as one continuous script.
-      function playFullScript() {
+      // Pass an explicit `qsOverride` (e.g. favouriteQuestions()) to bypass the
+      // Questions-tab filters entirely and play that list instead.
+      function playFullScript(qsOverride) {
         if (!_scriptStopped) {
           if (_scriptPaused) resumeFullScript();
           else pauseFullScript();
           return;
         }
 
-        const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
-        let qs = allQuestions();
-        if (state.activeCat !== 'all') qs = qs.filter(q => q.cat === state.activeCat);
-        if (state.activeExamType !== 'all') qs = qs.filter(q => q.examType === state.activeExamType);
-        if (state.activeStatus !== 'all') {
-          qs = qs.filter(q => (state.status[q.id] || 'new') === state.activeStatus);
-        }
-        if (search) {
-          qs = qs.filter(
-            q => q.q.toLowerCase().includes(search) || (q.a || '').toLowerCase().includes(search)
-          );
+        let qs;
+        if (qsOverride) {
+          qs = qsOverride;
+        } else {
+          const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+          qs = allQuestions();
+          if (state.activeCat !== 'all') qs = qs.filter(q => q.cat === state.activeCat);
+          if (state.activeExamType !== 'all') qs = qs.filter(q => q.examType === state.activeExamType);
+          if (state.activeStatus !== 'all') {
+            qs = qs.filter(q => (state.status[q.id] || 'new') === state.activeStatus);
+          }
+          if (search) {
+            qs = qs.filter(
+              q => q.q.toLowerCase().includes(search) || (q.a || '').toLowerCase().includes(search)
+            );
+          }
         }
         if (!qs.length) return;
 
@@ -186,6 +193,12 @@
         _updatePlayScriptButton();
         _updateSeekBar();
         _runScriptQueue(_scriptRunId);
+      }
+
+      // Play/pause/resume the favourites list specifically — shares the same
+      // engine/state as playFullScript() so Stop/seek controls work identically.
+      function playFavouritesScript() {
+        playFullScript(_scriptStopped ? favouriteQuestions() : undefined);
       }
 
       function pauseFullScript() {
@@ -236,29 +249,36 @@
       // Updates only the seek bar's displayed value/label while dragging,
       // without interrupting playback — the actual jump happens on release
       // (oninput vs onchange on the <input type="range">).
-      function seekScriptPreview(previewIndex) {
-        const label = document.getElementById('scriptSeekLabel');
+      function seekScriptPreview(previewIndex, labelId) {
+        const label = document.getElementById(labelId || 'scriptSeekLabel');
         if (label) label.textContent = `${+previewIndex + 1} / ${_scriptQueue.length}`;
       }
 
+      // Both the Questions tab and Favourites tab have their own copy of these
+      // play/seek controls (favXxx IDs), sharing the same underlying script
+      // engine/state — updates apply to whichever set is present in the DOM.
       function _updateSeekBar() {
-        const bar = document.getElementById('scriptSeekBar');
-        const label = document.getElementById('scriptSeekLabel');
-        if (bar) {
-          bar.max = Math.max(0, _scriptQueue.length - 1);
-          bar.value = _scriptIndex;
-        }
-        if (label) label.textContent = `${_scriptQueue.length ? _scriptIndex + 1 : 0} / ${_scriptQueue.length}`;
+        [['scriptSeekBar', 'scriptSeekLabel'], ['favScriptSeekBar', 'favScriptSeekLabel']].forEach(([barId, labelId]) => {
+          const bar = document.getElementById(barId);
+          const label = document.getElementById(labelId);
+          if (bar) {
+            bar.max = Math.max(0, _scriptQueue.length - 1);
+            bar.value = _scriptIndex;
+          }
+          if (label) label.textContent = `${_scriptQueue.length ? _scriptIndex + 1 : 0} / ${_scriptQueue.length}`;
+        });
       }
 
       function _updatePlayScriptButton() {
-        const btn = document.getElementById('playScriptBtn');
-        if (btn) {
-          btn.textContent = _scriptStopped ? '▶ Play' : _scriptPaused ? '▶ Resume' : '⏸ Pause';
-          btn.classList.toggle('btn-primary', _scriptStopped || _scriptPaused);
-          btn.classList.toggle('btn-danger', !_scriptStopped && !_scriptPaused);
-        }
-        const controls = document.getElementById('scriptControls');
-        if (controls) controls.classList.toggle('hidden', _scriptStopped);
+        [['playScriptBtn', 'scriptControls'], ['favPlayScriptBtn', 'favScriptControls']].forEach(([btnId, controlsId]) => {
+          const btn = document.getElementById(btnId);
+          if (btn) {
+            btn.textContent = _scriptStopped ? '▶ Play' : _scriptPaused ? '▶ Resume' : '⏸ Pause';
+            btn.classList.toggle('btn-primary', _scriptStopped || _scriptPaused);
+            btn.classList.toggle('btn-danger', !_scriptStopped && !_scriptPaused);
+          }
+          const controls = document.getElementById(controlsId);
+          if (controls) controls.classList.toggle('hidden', _scriptStopped);
+        });
       }
 

@@ -140,19 +140,21 @@
         'Du er n&aelig;rmere B1-eksamen enn du tror. Fortsett &aring; tro p&aring; deg selv! ✨',
       ];
 
-      function downloadQuestionsPdf() {
-        const qs = allQuestions();
-        const cats =
-          state.activeCat === 'all'
+      // Pass `questionsOverride` (e.g. favouriteQuestions()) to export exactly that
+      // list instead of the current category filter — used by the Favourites tab.
+      function downloadQuestionsPdf(questionsOverride, titleOverride) {
+        const qs = questionsOverride || allQuestions();
+        const cats = questionsOverride
+          ? CATS.filter(c => qs.some(q => q.cat === c.id))
+          : state.activeCat === 'all'
             ? CATS
             : CATS.filter(c => c.id === state.activeCat);
         const title =
-          state.activeCat === 'all'
-            ? 'All Categories'
-            : catLabel(state.activeCat);
+          titleOverride ||
+          (state.activeCat === 'all' ? 'All Categories' : catLabel(state.activeCat));
 
         const scopeQs =
-          state.activeCat === 'all'
+          questionsOverride || state.activeCat === 'all'
             ? qs
             : qs.filter(q => q.cat === state.activeCat);
         const totalCount = scopeQs.length;
