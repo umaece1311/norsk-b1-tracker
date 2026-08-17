@@ -12,8 +12,11 @@
     <div class="stat-card"><div class="stat-num">${pct}%</div><div class="stat-label">Completion</div></div>
   `;
 
+        // Category breakdown still shows every category (including General/Follow-up),
+        // just excluded from the totals above.
+        const allQs = allQuestions();
         const catHTML = CATS.map(cat => {
-          const catQs = qs.filter(q => q.cat === cat.id);
+          const catQs = allQs.filter(q => q.cat === cat.id);
           if (!catQs.length) return '';
           const catDone = catQs.filter(q => state.answers[q.id]?.trim()).length;
           const catPct = Math.round((catDone / catQs.length) * 100);
