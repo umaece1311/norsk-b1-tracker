@@ -19,6 +19,11 @@
         return [...BASE_QS, ...state.customQs];
       }
 
+      // Excludes General (opinions) and Follow-up questions from question/progress counts.
+      function trackedQuestions() {
+        return allQuestions().filter(q => q.cat !== 'opinions' && q.cat !== 'followup');
+      }
+
       function loadState() {
         try {
           const saved = localStorage.getItem('norsk-b1-state');
