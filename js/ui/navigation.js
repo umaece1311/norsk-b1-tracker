@@ -234,8 +234,9 @@
           opinions: '#f0f9ff',
           followup: '#fee2e2',
         };
+        const allQs = allQuestions();
         catsEl.innerHTML = CATS.map(cat => {
-          const count = qs.filter(q => q.cat === cat.id).length;
+          const count = allQs.filter(q => q.cat === cat.id).length;
           const isActive = state.activeCat === cat.id;
           const dotColor = catColors[cat.id] || '#94a3b8';
           return `<button class="sidebar-cat-btn${isActive ? ' active' : ''}" data-cat="${cat.id}" onclick="sidebarCatFilter('${cat.id}', this)">
