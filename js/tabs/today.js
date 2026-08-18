@@ -138,7 +138,7 @@
           });
 
         const dow = now.getDay();
-        const qs = allQuestions();
+        const qs = trackedQuestions();
         const total = qs.length;
         const done = qs.filter(q => state.answers[q.id]?.trim()).length;
         const pct = Math.round((done / total) * 100);
