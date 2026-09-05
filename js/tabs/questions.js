@@ -258,7 +258,7 @@
               return `
       <div class="pdf-item" id="play-${q.id}" data-q="${escapeHtml(q.q)}">
         <div class="pdf-question" id="q-${q.id}">
-          <span class="pdf-qnum">${q.id}</span> ${escapeHtml(q.q)}
+          <span class="pdf-qnum">${catPosition(q)}</span> ${escapeHtml(q.q)}
           <button class="pdf-listen-btn" onclick="pdfPlayItem('${q.id}')" title="Listen">🔊</button>
         </div>
         <div class="pdf-answer ${myAnswer ? 'pdf-answer-done' : 'pdf-answer-empty'}">${answerBulletsHTML(myAnswer, q.id)}</div>

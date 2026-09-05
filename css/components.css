@@ -426,6 +426,16 @@
         text-transform: uppercase;
         letter-spacing: 0.05em;
       }
+      .cat-badge-select {
+        font-size: 0.72rem;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 20px;
+        border: 1.5px solid #2563eb;
+        background: #eef2ff;
+        color: #1d4ed8;
+        cursor: pointer;
+      }
       .exam-badge {
         font-size: 0.7rem;
         font-weight: 700;

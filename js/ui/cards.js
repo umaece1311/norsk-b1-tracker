@@ -7,6 +7,42 @@
         return 'cat-' + catId;
       }
 
+      // Turns a card's category badge into a <select> so the question can be
+      // reassigned to any existing category (e.g. to group related questions
+      // like all "drømmeferie" ones under Travel instead of leaving them scattered).
+      function beginEditCategory(id) {
+        const badge = document.getElementById('catBadge-' + id);
+        if (!badge) return;
+        const q = allQuestions().find(x => x.id === id);
+        if (!q) return;
+
+        const options = CATS.map(
+          c => `<option value="${c.id}" ${c.id === q.cat ? 'selected' : ''}>${c.emoji} ${c.label}</option>`
+        ).join('');
+
+        badge.outerHTML = `<select class="cat-badge-select" id="catBadge-${id}"
+          onchange="applyEditCategory(${id}, this.value)"
+          onblur="cancelEditCategory(${id})">${options}</select>`;
+        document.getElementById('catBadge-' + id)?.focus();
+      }
+
+      function applyEditCategory(id, newCatId) {
+        const q = allQuestions().find(x => x.id === id);
+        if (q && newCatId !== q.cat) {
+          setQuestionCategory(id, newCatId);
+          showToast(`📁 Moved to ${catLabel(newCatId)}`);
+        }
+        renderQuestions();
+      }
+
+      function cancelEditCategory(id) {
+        const el = document.getElementById('catBadge-' + id);
+        if (!el || el.tagName !== 'SELECT') return;
+        const q = allQuestions().find(x => x.id === id);
+        if (!q) return;
+        el.outerHTML = `<span class="cat-badge ${catClass(q.cat)}" id="catBadge-${id}" onclick="beginEditCategory(${id})" title="Click to change category" style="cursor:pointer">${catLabel(q.cat)}</span>`;
+      }
+
       // ─── QUESTION CARD ────────────────────────────────────────────────────────────
       function renderCard(q, opts = {}) {
         const status = state.status[q.id] || 'new';
@@ -20,9 +56,9 @@
     <div class="card-header">
       <div style="flex:1">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap">
-          <span class="cat-badge ${catClass(q.cat)}">${catLabel(q.cat)}</span>
+          <span class="cat-badge ${catClass(q.cat)}" id="catBadge-${q.id}" onclick="beginEditCategory(${q.id})" title="Click to change category" style="cursor:pointer">${catLabel(q.cat)}</span>
           ${examBadge}
-          <span class="q-num">#${q.id}</span>
+          <span class="q-num">#${catPosition(q)}</span>
         </div>
         <div class="q-text">${q.q}</div>
       </div>
