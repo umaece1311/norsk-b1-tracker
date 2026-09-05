@@ -15,7 +15,7 @@
         // Category breakdown still shows every category (including General/Follow-up),
         // just excluded from the totals above.
         const allQs = allQuestions();
-        const catHTML = CATS.map(cat => {
+        const catHTML = allCats().map(cat => {
           const catQs = allQs.filter(q => q.cat === cat.id);
           if (!catQs.length) return '';
           const catDone = catQs.filter(q => state.answers[q.id]?.trim()).length;

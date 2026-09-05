@@ -1,38 +1,48 @@
       // ─── CATEGORY BADGE ───────────────────────────────────────────────────────────
       function catLabel(catId) {
-        const c = CATS.find(c => c.id === catId);
+        const c = allCats().find(c => c.id === catId);
         return c ? `${c.emoji} ${c.label}` : catId;
       }
       function catClass(catId) {
         return 'cat-' + catId;
       }
 
+      const NEW_CAT_VALUE = '__new__';
+
       // Turns a card's category badge into a <select> so the question can be
       // reassigned to any existing category (e.g. to group related questions
-      // like all "drømmeferie" ones under Travel instead of leaving them scattered).
+      // like all "drømmeferie" ones under Travel instead of leaving them scattered),
+      // or a brand new one created on the fly.
       function beginEditCategory(id) {
         const badge = document.getElementById('catBadge-' + id);
         if (!badge) return;
         const q = allQuestions().find(x => x.id === id);
         if (!q) return;
 
-        const options = CATS.map(
+        const options = allCats().map(
           c => `<option value="${c.id}" ${c.id === q.cat ? 'selected' : ''}>${c.emoji} ${c.label}</option>`
         ).join('');
 
         badge.outerHTML = `<select class="cat-badge-select" id="catBadge-${id}"
           onchange="applyEditCategory(${id}, this.value)"
-          onblur="cancelEditCategory(${id})">${options}</select>`;
+          onblur="cancelEditCategory(${id})">${options}<option value="${NEW_CAT_VALUE}">➕ New category…</option></select>`;
         document.getElementById('catBadge-' + id)?.focus();
       }
 
       function applyEditCategory(id, newCatId) {
+        if (newCatId === NEW_CAT_VALUE) {
+          const name = prompt('New category name:');
+          const createdId = createCategory(name);
+          if (!createdId) { cancelEditCategory(id); return; }
+          newCatId = createdId;
+        }
         const q = allQuestions().find(x => x.id === id);
         if (q && newCatId !== q.cat) {
           setQuestionCategory(id, newCatId);
           showToast(`📁 Moved to ${catLabel(newCatId)}`);
         }
         renderQuestions();
+        renderSidebar();
       }
 
       function cancelEditCategory(id) {

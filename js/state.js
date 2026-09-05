@@ -8,6 +8,7 @@
         customQs: [],
         followUps: {}, // mainQuestionId -> [{ q, a }, ...]
         catOverrides: {}, // id -> catId (user-reassigned category, overrides the built-in one)
+        customCats: [], // user-created categories, same shape as CATS entries
         apiKey: '',
         googleTtsKey: '',
         todayIds: [],
@@ -15,6 +16,29 @@
         activeExamType: 'all',
         activeStatus: 'all',
       };
+
+      // Built-in categories plus any the user has created on the fly.
+      function allCats() {
+        return [...CATS, ...(state.customCats || [])];
+      }
+
+      // Creates a new category (id derived from the name) and returns its id,
+      // or null if the name is empty or a matching category already exists.
+      function createCategory(name, emoji) {
+        const label = (name || '').trim();
+        if (!label) return null;
+        const id = label
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        if (!id) return null;
+        if (allCats().some(c => c.id === id)) return id;
+
+        if (!state.customCats) state.customCats = [];
+        state.customCats.push({ id, label, emoji: emoji || '🏷️' });
+        saveState();
+        return id;
+      }
 
       function allQuestions() {
         const qs = [...BASE_QS, ...state.customQs];
@@ -27,7 +51,7 @@
       // Reassigns a question to a different existing category. Works for both
       // built-in and custom questions since the override lives in state, not BASE_QS.
       function setQuestionCategory(id, catId) {
-        if (!CATS.some(c => c.id === catId)) return;
+        if (!allCats().some(c => c.id === catId)) return;
         if (!state.catOverrides) state.catOverrides = {};
         state.catOverrides[id] = catId;
         saveState();

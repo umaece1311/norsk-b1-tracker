@@ -3,13 +3,17 @@
 
       function renderAddForm() {
         const sel = document.getElementById('newCat');
-        if (!sel.options.length) {
-          CATS.forEach(c => {
+        if (sel.dataset.catCount !== String(allCats().length)) {
+          const prevValue = sel.value;
+          sel.innerHTML = '';
+          allCats().forEach(c => {
             const opt = document.createElement('option');
             opt.value = c.id;
             opt.textContent = `${c.emoji} ${c.label}`;
             sel.appendChild(opt);
           });
+          if (prevValue) sel.value = prevValue;
+          sel.dataset.catCount = String(allCats().length);
         }
         _editingCustomQId = null;
         _renderCustomQList();

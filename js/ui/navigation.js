@@ -235,7 +235,7 @@
           followup: '#fee2e2',
         };
         const allQs = allQuestions();
-        catsEl.innerHTML = CATS.map(cat => {
+        catsEl.innerHTML = allCats().map(cat => {
           const count = allQs.filter(q => q.cat === cat.id).length;
           const isActive = state.activeCat === cat.id;
           const dotColor = catColors[cat.id] || '#94a3b8';

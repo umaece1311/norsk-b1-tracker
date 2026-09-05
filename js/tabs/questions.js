@@ -18,16 +18,17 @@
 
       function renderCatFilters() {
         const el = document.getElementById('catFilters');
-        if (!el.children.length) {
+        if (el.dataset.catCount !== String(allCats().length)) {
           const chips = [
             `<span style="font-size:0.8rem;color:#888;font-weight:600;align-self:center">Category:</span>`,
-            `<span class="filter-chip active" data-cat="all" onclick="setCatFilter('all',this)">All</span>`,
-            ...CATS.map(
+            `<span class="filter-chip ${state.activeCat === 'all' ? 'active' : ''}" data-cat="all" onclick="setCatFilter('all',this)">All</span>`,
+            ...allCats().map(
               c =>
-                `<span class="filter-chip" data-cat="${c.id}" onclick="setCatFilter('${c.id}',this)">${c.emoji} ${c.label}</span>`
+                `<span class="filter-chip ${state.activeCat === c.id ? 'active' : ''}" data-cat="${c.id}" onclick="setCatFilter('${c.id}',this)">${c.emoji} ${c.label}</span>`
             ),
           ];
           el.innerHTML = chips.join('');
+          el.dataset.catCount = String(allCats().length);
         }
       }
 
@@ -145,10 +146,10 @@
       function downloadQuestionsPdf(questionsOverride, titleOverride) {
         const qs = questionsOverride || allQuestions();
         const cats = questionsOverride
-          ? CATS.filter(c => qs.some(q => q.cat === c.id))
+          ? allCats().filter(c => qs.some(q => q.cat === c.id))
           : state.activeCat === 'all'
-            ? CATS
-            : CATS.filter(c => c.id === state.activeCat);
+            ? allCats()
+            : allCats().filter(c => c.id === state.activeCat);
         const title =
           titleOverride ||
           (state.activeCat === 'all' ? 'All Categories' : catLabel(state.activeCat));
