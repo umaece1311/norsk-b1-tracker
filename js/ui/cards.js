@@ -54,16 +54,69 @@
       }
 
       // ─── QUESTION CARD ────────────────────────────────────────────────────────────
+      // Drag-and-drop reordering is only meaningful when the cards on screen are a
+      // single category's siblings in a stable order — i.e. the Questions tab with
+      // one specific category filter selected and no search text. Callers from other
+      // views (Favourites, Today) mix categories together and never opt in, so
+      // reordering there is disabled by default.
+      function reorderingEnabled(opts) {
+        if (!opts.allowReorder) return false;
+        const search = document.getElementById('searchInput')?.value || '';
+        return state.activeCat !== 'all' && !search.trim();
+      }
+
+      let draggedQId = null;
+
+      function onCardDragStart(evt, id) {
+        draggedQId = id;
+        evt.dataTransfer.effectAllowed = 'move';
+        document.getElementById('card-' + id)?.classList.add('dragging');
+      }
+
+      function onCardDragEnd() {
+        document.getElementById('card-' + draggedQId)?.classList.remove('dragging');
+        document
+          .querySelectorAll('.card.drag-over')
+          .forEach(el => el.classList.remove('drag-over'));
+        draggedQId = null;
+      }
+
+      function onCardDragOver(evt, id) {
+        if (draggedQId === null || draggedQId === id) return;
+        evt.preventDefault();
+        evt.dataTransfer.dropEffect = 'move';
+        document
+          .querySelectorAll('.card.drag-over')
+          .forEach(el => el.classList.remove('drag-over'));
+        document.getElementById('card-' + id)?.classList.add('drag-over');
+      }
+
+      function onCardDrop(evt, targetId) {
+        evt.preventDefault();
+        if (draggedQId === null || draggedQId === targetId) return;
+        const cardEl = document.getElementById('card-' + targetId);
+        const rect = cardEl?.getBoundingClientRect();
+        const placeAfter = rect ? evt.clientY - rect.top > rect.height / 2 : false;
+        reorderQuestion(draggedQId, targetId, placeAfter);
+        renderQuestions();
+      }
+
       function renderCard(q, opts = {}) {
         const status = state.status[q.id] || 'new';
         const answer = state.answers[q.id] || '';
         const examBadge = q.examType
           ? `<span class="exam-badge badge-${q.examType}">Type ${q.examType}</span>`
           : '';
+        const canDrag = reorderingEnabled(opts);
+        const dragHandle = canDrag
+          ? `<span class="drag-handle" draggable="true" ondragstart="onCardDragStart(event,${q.id})" ondragend="onCardDragEnd(event)" title="Drag to reorder">⠿</span>`
+          : '';
 
         return `
-  <div class="card" id="card-${q.id}">
+  <div class="card" id="card-${q.id}" data-qid="${q.id}"
+    ${canDrag ? `ondragover="onCardDragOver(event,${q.id})" ondrop="onCardDrop(event,${q.id})"` : ''}>
     <div class="card-header">
+      ${dragHandle}
       <div style="flex:1">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap">
           <span class="cat-badge ${catClass(q.cat)}" id="catBadge-${q.id}" onclick="beginEditCategory(${q.id})" title="Click to change category" style="cursor:pointer">${catLabel(q.cat)}</span>

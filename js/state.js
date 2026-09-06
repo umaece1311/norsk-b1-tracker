@@ -9,6 +9,7 @@
         followUps: {}, // mainQuestionId -> [{ q, a }, ...]
         catOverrides: {}, // id -> catId (user-reassigned category, overrides the built-in one)
         customCats: [], // user-created categories, same shape as CATS entries
+        questionOrder: [], // ids in user-chosen display order (drag-and-drop); ids not listed keep their natural order at the end
         apiKey: '',
         googleTtsKey: '',
         todayIds: [],
@@ -17,9 +18,17 @@
         activeStatus: 'all',
       };
 
+      // Categories that always sink to the end of any category list, in this order.
+      const PINNED_LAST_CAT_IDS = ['opinions', 'followup'];
+
       // Built-in categories plus any the user has created on the fly.
+      // General/Follow-up are always pinned last, even ahead of custom categories.
       function allCats() {
-        return [...CATS, ...(state.customCats || [])];
+        const cats = [...CATS, ...(state.customCats || [])];
+        return [
+          ...cats.filter(c => !PINNED_LAST_CAT_IDS.includes(c.id)),
+          ...PINNED_LAST_CAT_IDS.map(id => cats.find(c => c.id === id)).filter(Boolean),
+        ];
       }
 
       // Creates a new category (id derived from the name) and returns its id,
@@ -42,10 +51,40 @@
 
       function allQuestions() {
         const qs = [...BASE_QS, ...state.customQs];
-        if (!state.catOverrides) return qs;
-        return qs.map(q =>
-          state.catOverrides[q.id] ? { ...q, cat: state.catOverrides[q.id] } : q
-        );
+        const withOverrides = !state.catOverrides
+          ? qs
+          : qs.map(q => (state.catOverrides[q.id] ? { ...q, cat: state.catOverrides[q.id] } : q));
+
+        const order = state.questionOrder;
+        if (!order || !order.length) return withOverrides;
+
+        const rank = new Map(order.map((id, i) => [id, i]));
+        return [...withOverrides].sort((a, b) => {
+          const ra = rank.has(a.id) ? rank.get(a.id) : Infinity;
+          const rb = rank.has(b.id) ? rank.get(b.id) : Infinity;
+          if (ra !== rb) return ra - rb;
+          return a.id - b.id;
+        });
+      }
+
+      // Moves question `draggedId` to sit just before/after `targetId`, scoped to
+      // their shared category (siblings only) so drag-and-drop within one
+      // category's list doesn't disturb the relative order of other categories.
+      function reorderQuestion(draggedId, targetId, placeAfter) {
+        if (draggedId === targetId) return;
+        const qs = allQuestions();
+        const dragged = qs.find(q => q.id === draggedId);
+        const target = qs.find(q => q.id === targetId);
+        if (!dragged || !target || dragged.cat !== target.cat) return;
+
+        const ids = qs.map(q => q.id);
+        ids.splice(ids.indexOf(draggedId), 1);
+        let insertAt = ids.indexOf(targetId);
+        if (placeAfter) insertAt += 1;
+        ids.splice(insertAt, 0, draggedId);
+
+        state.questionOrder = ids;
+        saveState();
       }
 
       // Reassigns a question to a different existing category. Works for both

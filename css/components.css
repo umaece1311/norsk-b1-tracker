@@ -409,6 +409,24 @@
       .card.script-playing {
         box-shadow: 0 0 0 3px #2563eb, 0 4px 14px rgba(37, 99, 235, 0.25);
       }
+      .card.dragging {
+        opacity: 0.4;
+      }
+      .card.drag-over {
+        box-shadow: 0 0 0 2px #2563eb, 0 2px 8px rgba(0, 0, 0, 0.06);
+      }
+      .drag-handle {
+        cursor: grab;
+        color: #94a3b8;
+        font-size: 1.1rem;
+        line-height: 1;
+        padding: 2px 4px;
+        user-select: none;
+        align-self: flex-start;
+      }
+      .drag-handle:active {
+        cursor: grabbing;
+      }
       @media (max-width: 768px) {
         .card { padding: 14px 12px; border-radius: 12px; }
       }

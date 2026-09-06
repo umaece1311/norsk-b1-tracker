@@ -66,7 +66,7 @@
           );
 
         document.getElementById('questionsList').innerHTML = qs.length
-          ? qs.map(q => renderCard(q, { showTimer: true })).join('')
+          ? qs.map(q => renderCard(q, { showTimer: true, allowReorder: true })).join('')
           : '<p style="color:#888;text-align:center;padding:40px">No questions match your filters.</p>';
       }
 
