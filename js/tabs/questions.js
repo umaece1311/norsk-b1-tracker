@@ -250,14 +250,17 @@
           const catQs = qs.filter(q => q.cat === cat.id);
           if (!catQs.length) return '';
 
-          const typeGroupsHTML = ['A', 'B', 'C'].map(t => {
-            const typeQs = catQs.filter(q => q.examType === t);
-            if (!typeQs.length) return '';
-
-            const itemsHTML = typeQs.map(q => {
+          // Keep the user's (drag-and-drop) order; show the exam type as a per-question tag
+          // instead of regrouping by A/B/C, which would scramble the chosen order.
+          const typeGroupsHTML = catQs.map(q => {
               const myAnswer = state.answers[q.id]?.trim();
+              const t = q.examType;
+              const typeTag = EXAM_TYPE_LABEL[t]
+                ? `<h3 class="pdf-type-${t}" style="margin:0 0 6px;font-size:0.8rem">${EXAM_TYPE_LABEL[t]}</h3>`
+                : '';
               return `
       <div class="pdf-item" id="play-${q.id}" data-q="${escapeHtml(q.q)}">
+        ${typeTag}
         <div class="pdf-question" id="q-${q.id}">
           <span class="pdf-qnum">${catPosition(q)}</span> ${escapeHtml(q.q)}
           <button class="pdf-listen-btn" onclick="pdfPlayItem('${q.id}')" title="Listen">🔊</button>
@@ -265,13 +268,6 @@
         <div class="pdf-answer ${myAnswer ? 'pdf-answer-done' : 'pdf-answer-empty'}">${answerBulletsHTML(myAnswer, q.id)}</div>
         ${vocabHTMLFor(q)}
         ${followUpsHTMLFor(q)}
-      </div>`;
-            }).join('');
-
-            return `
-      <div class="pdf-type-group">
-        <h3 class="pdf-type-${t}">${EXAM_TYPE_LABEL[t]}</h3>
-        ${itemsHTML}
       </div>`;
           }).join('');
 
