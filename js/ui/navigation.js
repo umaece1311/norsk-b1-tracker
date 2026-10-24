@@ -143,6 +143,42 @@
         showTab('questions');
       }
 
+      let draggedCatId = null;
+
+      function onCatDragStart(evt, id) {
+        draggedCatId = id;
+        evt.dataTransfer.effectAllowed = 'move';
+        evt.currentTarget.classList.add('dragging');
+      }
+
+      function onCatDragEnd() {
+        document
+          .querySelectorAll('.sidebar-cat-btn.dragging, .sidebar-cat-btn.drag-over')
+          .forEach(el => el.classList.remove('dragging', 'drag-over'));
+        draggedCatId = null;
+      }
+
+      function onCatDragOver(evt, id) {
+        if (draggedCatId === null || draggedCatId === id) return;
+        evt.preventDefault();
+        evt.dataTransfer.dropEffect = 'move';
+        document
+          .querySelectorAll('.sidebar-cat-btn.drag-over')
+          .forEach(el => el.classList.remove('drag-over'));
+        evt.currentTarget.classList.add('drag-over');
+      }
+
+      function onCatDrop(evt, targetId) {
+        evt.preventDefault();
+        if (draggedCatId === null || draggedCatId === targetId) return;
+        const rect = evt.currentTarget.getBoundingClientRect();
+        const placeAfter = evt.clientY - rect.top > rect.height / 2;
+        reorderCategory(draggedCatId, targetId, placeAfter);
+        draggedCatId = null;
+        renderSidebar();
+        renderCatFilters();
+      }
+
       function renderSidebar() {
         const qs = trackedQuestions();
         const total = qs.length;
@@ -239,7 +275,11 @@
           const count = allQs.filter(q => q.cat === cat.id).length;
           const isActive = state.activeCat === cat.id;
           const dotColor = catColors[cat.id] || '#94a3b8';
-          return `<button class="sidebar-cat-btn${isActive ? ' active' : ''}" data-cat="${cat.id}" onclick="sidebarCatFilter('${cat.id}', this)">
+          const pinned = PINNED_LAST_CAT_IDS.includes(cat.id);
+          const dragAttrs = pinned
+            ? ''
+            : ` draggable="true" ondragstart="onCatDragStart(event,'${cat.id}')" ondragend="onCatDragEnd()" ondragover="onCatDragOver(event,'${cat.id}')" ondrop="onCatDrop(event,'${cat.id}')"`;
+          return `<button class="sidebar-cat-btn${isActive ? ' active' : ''}${pinned ? '' : ' reorderable'}" data-cat="${cat.id}"${dragAttrs} onclick="sidebarCatFilter('${cat.id}', this)">
             <span class="cat-dot" style="background:${dotColor}"></span>
             ${cat.emoji} ${cat.label}
             <span class="cat-count">${count}</span>

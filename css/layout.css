@@ -434,3 +434,12 @@
           padding-bottom: calc(80px + env(safe-area-inset-bottom));
         }
       }
+      .sidebar-cat-btn.reorderable {
+        cursor: grab;
+      }
+      .sidebar-cat-btn.dragging {
+        opacity: 0.4;
+      }
+      .sidebar-cat-btn.drag-over {
+        box-shadow: 0 0 0 2px #2563eb;
+      }

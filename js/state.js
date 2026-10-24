@@ -9,6 +9,7 @@
         followUps: {}, // mainQuestionId -> [{ q, a }, ...]
         catOverrides: {}, // id -> catId (user-reassigned category, overrides the built-in one)
         customCats: [], // user-created categories, same shape as CATS entries
+        catOrder: [], // category ids in user-chosen display order (drag-and-drop); unlisted ones keep their natural order after
         questionOrder: [], // ids in user-chosen display order (drag-and-drop); ids not listed keep their natural order at the end
         apiKey: '',
         googleTtsKey: '',
@@ -25,10 +26,34 @@
       // General/Follow-up are always pinned last, even ahead of custom categories.
       function allCats() {
         const cats = [...CATS, ...(state.customCats || [])];
+        const order = state.catOrder || [];
+        const rank = id => (order.includes(id) ? order.indexOf(id) : Infinity);
+        const movable = cats.filter(c => !PINNED_LAST_CAT_IDS.includes(c.id));
+        // Array.sort is stable, so unlisted categories keep their natural order.
+        movable.sort((a, b) => rank(a.id) - rank(b.id));
         return [
-          ...cats.filter(c => !PINNED_LAST_CAT_IDS.includes(c.id)),
+          ...movable,
           ...PINNED_LAST_CAT_IDS.map(id => cats.find(c => c.id === id)).filter(Boolean),
         ];
+      }
+
+      // Moves category `draggedId` to sit just before/after `targetId`. Pinned
+      // categories (General/Follow-up) can neither be moved nor be dropped around.
+      function reorderCategory(draggedId, targetId, placeAfter) {
+        if (draggedId === targetId) return;
+        if (PINNED_LAST_CAT_IDS.includes(draggedId) || PINNED_LAST_CAT_IDS.includes(targetId)) return;
+        const ids = allCats().map(c => c.id);
+        ids.splice(ids.indexOf(draggedId), 1);
+        let insertAt = ids.indexOf(targetId);
+        if (placeAfter) insertAt += 1;
+        ids.splice(insertAt, 0, draggedId);
+        state.catOrder = ids;
+        saveState();
+      }
+
+      // Cache key for UIs that only rebuild their category list when it changes.
+      function catsSignature() {
+        return allCats().map(c => c.id).join('|');
       }
 
       // Creates a new category (id derived from the name) and returns its id,

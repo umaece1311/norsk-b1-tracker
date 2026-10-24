@@ -18,7 +18,7 @@
 
       function renderCatFilters() {
         const el = document.getElementById('catFilters');
-        if (el.dataset.catCount !== String(allCats().length)) {
+        if (el.dataset.catCount !== catsSignature()) {
           const chips = [
             `<span style="font-size:0.8rem;color:#888;font-weight:600;align-self:center">Category:</span>`,
             `<span class="filter-chip ${state.activeCat === 'all' ? 'active' : ''}" data-cat="all" onclick="setCatFilter('all',this)">All</span>`,
@@ -28,7 +28,7 @@
             ),
           ];
           el.innerHTML = chips.join('');
-          el.dataset.catCount = String(allCats().length);
+          el.dataset.catCount = catsSignature();
         }
       }
 

@@ -3,7 +3,7 @@
 
       function renderAddForm() {
         const sel = document.getElementById('newCat');
-        if (sel.dataset.catCount !== String(allCats().length)) {
+        if (sel.dataset.catCount !== catsSignature()) {
           const prevValue = sel.value;
           sel.innerHTML = '';
           allCats().forEach(c => {
@@ -13,7 +13,7 @@
             sel.appendChild(opt);
           });
           if (prevValue) sel.value = prevValue;
-          sel.dataset.catCount = String(allCats().length);
+          sel.dataset.catCount = catsSignature();
         }
         _editingCustomQId = null;
         _renderCustomQList();
