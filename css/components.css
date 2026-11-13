@@ -538,6 +538,59 @@
         transition: border 0.2s;
         -webkit-appearance: none;
       }
+      /* Highlight layer behind a transparent textarea; fonts/padding/wrapping must match exactly. */
+      .answer-wrap {
+        position: relative;
+      }
+      .answer-wrap .answer-area,
+      .answer-backdrop {
+        box-sizing: border-box;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        padding: 10px 12px;
+        border: 1.5px solid transparent;
+        border-radius: 10px;
+        letter-spacing: normal;
+        scrollbar-gutter: stable;
+      }
+      .answer-wrap .answer-area {
+        display: block;
+        position: relative;
+        background: transparent;
+        border-color: #e5e7eb;
+        overflow: auto;
+      }
+      .answer-wrap .answer-area:focus {
+        border-color: #2563eb;
+      }
+      .answer-backdrop {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        color: transparent;
+        pointer-events: none;
+      }
+      .answer-backdrop mark.vk {
+        color: transparent;
+        background: #e9d5ff;
+        border-radius: 3px;
+      }
+      mark.vk {
+        background: #f3e8ff;
+        color: #6b21a8;
+        font-weight: 700;
+        border-bottom: 2px solid #c084fc;
+        border-radius: 2px;
+      }
+      @media (max-width: 768px) {
+        .answer-wrap .answer-area,
+        .answer-backdrop {
+          font-size: 1rem;
+        }
+      }
       .answer-area:focus {
         outline: none;
         border-color: #2563eb;

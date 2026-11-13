@@ -53,6 +53,43 @@
         el.outerHTML = `<span class="cat-badge ${catClass(q.cat)}" id="catBadge-${id}" onclick="beginEditCategory(${id})" title="Click to change category" style="cursor:pointer">${catLabel(q.cat)}</span>`;
       }
 
+      // ─── KEY-VOCABULARY HIGHLIGHTING ──────────────────────────────────────────────
+      // "Important" words = the content words the Vocabulary tab collects (extractWords).
+      // Returns escaped HTML with those words wrapped in <mark class="vk">.
+      function highlightKeyWordsHTML(text) {
+        const src = text || '';
+        const keys = new Set(extractWords(src));
+        return src
+          .split(/([A-Za-zÆØÅæøå]+)/)
+          .map((part, i) =>
+            i % 2 && keys.has(part.toLowerCase())
+              ? `<mark class="vk">${escapeHtml(part)}</mark>`
+              : escapeHtml(part)
+          )
+          .join('');
+      }
+
+      // A textarea can't style individual words, so a highlight layer sits behind a
+      // transparent textarea and mirrors its text (kept in sync by syncAnswerHighlight).
+      function answerAreaHTML(domId, saveArg, value, extraClass = '') {
+        return `<div class="answer-wrap">
+      <div class="answer-backdrop" id="hl-${domId}" aria-hidden="true">${highlightKeyWordsHTML(value)}\n </div>
+      <textarea class="answer-area ${extraClass}" id="ans-${domId}" placeholder="Write your answer in Norwegian…" oninput="autoSaveAnswer(${saveArg}); syncAnswerHighlight(this)" onscroll="syncAnswerScroll(this)">${value}</textarea>
+    </div>`;
+      }
+
+      function syncAnswerHighlight(ta) {
+        const hl = document.getElementById('hl-' + ta.id.slice(4));
+        if (!hl) return;
+        hl.innerHTML = highlightKeyWordsHTML(ta.value) + '\n ';
+        hl.scrollTop = ta.scrollTop;
+      }
+
+      function syncAnswerScroll(ta) {
+        const hl = document.getElementById('hl-' + ta.id.slice(4));
+        if (hl) hl.scrollTop = ta.scrollTop;
+      }
+
       // ─── QUESTION CARD ────────────────────────────────────────────────────────────
       // Drag-and-drop reordering is only meaningful when the cards on screen are a
       // single category's siblings in a stable order — i.e. the Questions tab with
@@ -137,14 +174,14 @@
       <button class="status-btn ${status === 'done' ? 'active-done' : ''}" onclick="setStatus(${q.id},'done')">✅ Done</button>
     </div>
 
-    <textarea class="answer-area" id="ans-${q.id}" placeholder="Write your answer in Norwegian…" oninput="autoSaveAnswer(${q.id})">${answer}</textarea>
+    ${answerAreaHTML(q.id, q.id, answer)}
 
     ${q.a ? `
     <div class="pdf-answer-box">
       <div class="pdf-answer-toggle" onclick="togglePdfAnswer(${q.id}, this)">
         <span>📖</span> <span>PDF Sample Answer</span> <span style="margin-left:auto;font-size:1rem">▼</span>
       </div>
-      <div class="pdf-answer-content hidden" id="pdf-ans-${q.id}">${escapeHtml(q.a)}</div>
+      <div class="pdf-answer-content hidden" id="pdf-ans-${q.id}">${highlightKeyWordsHTML(q.a)}</div>
     </div>` : ''}
 
     ${renderFollowUps(q)}
@@ -235,13 +272,13 @@
           <div class="followup-q">${escapeHtml(fu.q)}</div>
           <button class="btn-cq-delete" onclick="deleteFollowUp(${q.id},${i})" title="Delete follow-up">🗑</button>
         </div>
-        <textarea class="answer-area followup-answer-area" id="ans-${fuId}" placeholder="Write your answer in Norwegian…" oninput="autoSaveAnswer('${fuId}')">${fuAnswer}</textarea>
+        ${answerAreaHTML(fuId, `'${fuId}'`, fuAnswer, 'followup-answer-area')}
         ${fu.a ? `
         <div class="pdf-answer-box">
           <div class="pdf-answer-toggle" onclick="togglePdfAnswer('${fuId}', this)">
             <span>📖</span> <span>Sample Answer</span> <span style="margin-left:auto;font-size:1rem">▼</span>
           </div>
-          <div class="pdf-answer-content hidden" id="pdf-ans-${fuId}">${escapeHtml(fu.a)}</div>
+          <div class="pdf-answer-content hidden" id="pdf-ans-${fuId}">${highlightKeyWordsHTML(fu.a)}</div>
         </div>` : ''}
         <button class="btn btn-primary" style="margin-top:6px" onclick="saveAnswer('${fuId}')">💾 Save</button>
       </div>`;

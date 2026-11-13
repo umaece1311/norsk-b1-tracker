@@ -481,6 +481,7 @@
     .pdf-listen-btn { font-size: 1.1rem; }
   }
   @media print {
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     body { padding: 0; }
     .pdf-item { break-inside: avoid; }
     .pdf-controls, .pdf-listen-btn { display: none; }
