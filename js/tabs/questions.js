@@ -143,7 +143,64 @@
 
       // Pass `questionsOverride` (e.g. favouriteQuestions()) to export exactly that
       // list instead of the current category filter — used by the Favourites tab.
-      function downloadQuestionsPdf(questionsOverride, titleOverride) {
+      // Each question, follow-up and answer sentence is shown with its English
+      // translation alongside. Translations are cached in localStorage so repeat
+      // exports are instant and don't hit the free translation APIs again.
+      const PDF_EN_CACHE_KEY = 'norsk-b1-pdf-en';
+
+      function pdfSplitSentences(text) {
+        return (text || '')
+          .split(/(?<=[.!?])\s+/)
+          .map(s => s.trim())
+          .filter(Boolean);
+      }
+
+      // Returns { norwegianText: englishText } for every string in `texts`.
+      // Strings that fail to translate are simply left out of the map.
+      async function pdfTranslateAll(texts, onProgress) {
+        let cache = {};
+        try {
+          cache = JSON.parse(localStorage.getItem(PDF_EN_CACHE_KEY) || '{}');
+        } catch (e) {}
+        const unique = [...new Set(texts.filter(t => t && t.trim()))];
+        const todo = unique.filter(t => !cache[t]);
+        let done = unique.length - todo.length;
+        onProgress(done, unique.length);
+
+        let next = 0;
+        const worker = async () => {
+          while (next < todo.length) {
+            const t = todo[next++];
+            try {
+              cache[t] = (await freeTranslate(t, 'no', 'en')).text;
+            } catch (e) {}
+            onProgress(++done, unique.length);
+          }
+        };
+        await Promise.all(Array.from({ length: 4 }, worker));
+
+        try {
+          localStorage.setItem(PDF_EN_CACHE_KEY, JSON.stringify(cache));
+        } catch (e) {}
+        return cache;
+      }
+
+      async function downloadQuestionsPdf(questionsOverride, titleOverride) {
+        // Must open synchronously (inside the click) or popup blockers kick in.
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+          showToast('⚠️ Popup blocked — allow popups for this site to open the PDF page.');
+          return;
+        }
+        const setLoading = msg => {
+          printWindow.document.open();
+          printWindow.document.write(
+            `<!doctype html><title>Norsk B1</title><body style="font-family:Arial,sans-serif;padding:40px;color:#1a2235"><h2>🌐 ${msg}</h2><p>Translating Norwegian → English. This only takes long the first time.</p></body>`
+          );
+          printWindow.document.close();
+        };
+        setLoading('Preparing your PDF…');
+
         const qs = questionsOverride || allQuestions();
         const cats = questionsOverride
           ? allCats().filter(c => qs.some(q => q.cat === c.id))
@@ -182,6 +239,21 @@
           })
           .join('');
 
+        // ── Collect every Norwegian string and translate it up front ──────────────
+        const toTranslate = [];
+        qs.forEach(q => {
+          toTranslate.push(q.q);
+          pdfSplitSentences(state.answers[q.id]?.trim()).forEach(t => toTranslate.push(t));
+          (state.followUps?.[q.id] || []).forEach((fu, i) => {
+            toTranslate.push(fu.q);
+            pdfSplitSentences(state.answers[`${q.id}-f${i}`]?.trim()).forEach(t => toTranslate.push(t));
+          });
+        });
+        const EN = await pdfTranslateAll(toTranslate, (n, total) =>
+          setLoading(`Translating ${n} / ${total}…`)
+        );
+        const enOf = t => (EN[t] ? escapeHtml(EN[t]) : '');
+
         // ── Per-question vocabulary (dedupe within that question's own text) ──────
         function vocabHTMLFor(q) {
           const words = new Set();
@@ -207,10 +279,7 @@
         // playback script can highlight along as speechSynthesis speaks it.
         function answerBulletsHTML(answerText, playId) {
           if (!answerText) return '<span class="pdf-noanswer">✏️ Not answered yet &mdash; give it a try today!</span>';
-          const sentences = answerText
-            .split(/(?<=[.!?])\s+/)
-            .map(s => s.trim())
-            .filter(Boolean);
+          const sentences = pdfSplitSentences(answerText);
           return `<ul class="pdf-answer-list" id="ans-list-${playId}">` +
             sentences
               .map((s, si) => {
@@ -219,7 +288,7 @@
                   .filter(Boolean)
                   .map((w, wi) => `<span class="pdf-word" data-s="${si}" data-w="${wi}">${escapeHtml(w)}</span>`)
                   .join(' ');
-                return `<li data-sentence="${si}" data-text="${escapeHtml(s)}">${wordsHTML}</li>`;
+                return `<li data-sentence="${si}" data-text="${escapeHtml(s)}"><span class="pdf-no">${wordsHTML}</span><span class="pdf-en">${enOf(s)}</span></li>`;
               })
               .join('') +
             '</ul>';
@@ -236,8 +305,11 @@
             const myAnswer = state.answers[fuId]?.trim();
             return `
           <div class="pdf-followup-item" id="play-${fuId}" data-q="${escapeHtml(fu.q)}">
-            <div class="pdf-followup-q">🔁 ${escapeHtml(fu.q)}
-              <button class="pdf-listen-btn" onclick="pdfPlayItem('${fuId}')" title="Listen">🔊</button>
+            <div class="pdf-row pdf-followup-q">
+              <span>🔁 ${escapeHtml(fu.q)}
+                <button class="pdf-listen-btn" onclick="pdfPlayItem('${fuId}')" title="Listen">🔊</button>
+              </span>
+              <span class="pdf-en">${enOf(fu.q)}</span>
             </div>
             <div class="pdf-answer ${myAnswer ? 'pdf-answer-done' : 'pdf-answer-empty'}">${answerBulletsHTML(myAnswer, fuId)}</div>
           </div>`;
@@ -261,9 +333,11 @@
               return `
       <div class="pdf-item" id="play-${q.id}" data-q="${escapeHtml(q.q)}">
         ${typeTag}
-        <div class="pdf-question" id="q-${q.id}">
-          <span class="pdf-qnum">${catPosition(q)}</span> ${escapeHtml(q.q)}
-          <button class="pdf-listen-btn" onclick="pdfPlayItem('${q.id}')" title="Listen">🔊</button>
+        <div class="pdf-row pdf-question" id="q-${q.id}">
+          <span><span class="pdf-qnum">${catPosition(q)}</span> ${escapeHtml(q.q)}
+            <button class="pdf-listen-btn" onclick="pdfPlayItem('${q.id}')" title="Listen">🔊</button>
+          </span>
+          <span class="pdf-en">${enOf(q.q)}</span>
         </div>
         <div class="pdf-answer ${myAnswer ? 'pdf-answer-done' : 'pdf-answer-empty'}">${answerBulletsHTML(myAnswer, q.id)}</div>
         ${vocabHTMLFor(q)}
@@ -274,15 +348,12 @@
           return `
     <div class="pdf-section" id="cat-${cat.id}">
       <h2>${cat.emoji} ${escapeHtml(cat.label)}</h2>
+      <div class="pdf-colhead"><span>🇳🇴 Norsk</span><span>🇬🇧 English</span></div>
       ${typeGroupsHTML}
     </div>`;
         }).join('');
 
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) {
-          showToast('⚠️ Popup blocked — allow popups for this site to open the PDF page.');
-          return;
-        }
+        printWindow.document.open();
         printWindow.document.write(`
 <!doctype html>
 <html lang="en">
@@ -292,6 +363,7 @@
 <title>Norsk B1 — My Questions &amp; Answers</title>
 <style>
   body { font-family: 'DM Sans', Arial, sans-serif; color: #1a2235; padding: 24px 32px; max-width: 800px; margin: 0 auto; font-size: 1.05rem; }
+  body { max-width: 1000px; }
   @media (max-width: 600px) {
     body { padding: 14px 16px; font-size: 1rem; }
     h1 { font-size: 1.3rem; }
@@ -301,6 +373,7 @@
     .pdf-controls button { flex: 1 1 auto; padding: 10px 8px; font-size: 0.85rem; min-height: 40px; }
     .pdf-question { font-size: 1.05rem; }
     .pdf-answer, .pdf-answer-list li { font-size: 1rem; }
+    .pdf-row, .pdf-answer-list li, .pdf-colhead { gap: 10px; }
   }
   h1 { font-family: Georgia, serif; font-size: 1.7rem; margin-bottom: 4px; color: #1a2235; }
   h1 .flag { font-size: 1.4rem; }
@@ -346,8 +419,13 @@
     text-align: center; line-height: 22px; margin-right: 4px;
   }
   .pdf-answer { border-left: 3px solid #e5e7eb; padding-left: 12px; font-size: 1.05rem; line-height: 1.55; }
-  .pdf-answer-list { margin: 0; padding-left: 18px; }
-  .pdf-answer-list li { margin-bottom: 4px; }
+  .pdf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .pdf-answer-list { margin: 0; padding-left: 0; list-style: none; }
+  .pdf-answer-list li { margin-bottom: 4px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .pdf-en { color: #475569; font-weight: 400; font-style: italic; }
+  .pdf-question .pdf-en, .pdf-followup-q .pdf-en { font-weight: 600; }
+  .pdf-answer-done .pdf-answer-list li .pdf-en { color: #475569; font-weight: 400; }
+  .pdf-colhead { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #64748b; border-bottom: 2px solid #e5e7eb; padding-bottom: 4px; margin-bottom: 14px; }
   .pdf-answer-done { border-left-color: #22c55e; }
   .pdf-answer-done .pdf-answer-list li { color: #14532d; font-weight: 600; }
   .pdf-answer-empty { border-left-color: #fca5a5; }
