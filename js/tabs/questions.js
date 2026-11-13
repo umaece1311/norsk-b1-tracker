@@ -280,13 +280,21 @@
         function answerBulletsHTML(answerText, playId) {
           if (!answerText) return '<span class="pdf-noanswer">✏️ Not answered yet &mdash; give it a try today!</span>';
           const sentences = pdfSplitSentences(answerText);
+          // "Important" = the same content words the Vocabulary tab collects.
+          const keyWords = new Set(extractWords(answerText));
           return `<ul class="pdf-answer-list" id="ans-list-${playId}">` +
             sentences
               .map((s, si) => {
                 const wordsHTML = s
                   .split(/\s+/)
                   .filter(Boolean)
-                  .map((w, wi) => `<span class="pdf-word" data-s="${si}" data-w="${wi}">${escapeHtml(w)}</span>`)
+                  .map((w, wi) => {
+                    const key = w.toLowerCase().replace(/[.,!?;:«»""''()\[\]{}\-–—\/\\]/g, '');
+                    const isKey = keyWords.has(key);
+                    const en = isKey ? state.vocab[key]?.en : '';
+                    const tip = en ? ` title="${escapeHtml(en)}"` : '';
+                    return `<span class="pdf-word${isKey ? ' pdf-key' : ''}"${tip} data-s="${si}" data-w="${wi}">${escapeHtml(w)}</span>`;
+                  })
                   .join(' ');
                 return `<li data-sentence="${si}" data-text="${escapeHtml(s)}"><span class="pdf-no">${wordsHTML}</span><span class="pdf-en">${enOf(s)}</span></li>`;
               })
@@ -465,8 +473,9 @@
     padding: 6px 8px; min-width: 32px; min-height: 32px;
   }
   .pdf-listen-btn:hover { opacity: 1; }
+  .pdf-word.pdf-key { background: #f3e8ff; color: #6b21a8; font-weight: 700; border-bottom: 2px solid #c084fc; }
   .pdf-word { transition: background 0.1s; border-radius: 3px; padding: 0 1px; }
-  .pdf-word.speaking { background: #fde047; }
+  .pdf-word.speaking, .pdf-word.pdf-key.speaking { background: #fde047; }
   .pdf-item.playing, .pdf-followup-item.playing { outline: 2px solid #2563eb; outline-offset: 4px; border-radius: 8px; }
   @media (max-width: 600px) {
     .pdf-listen-btn { font-size: 1.1rem; }
@@ -491,6 +500,7 @@
   </div>
   <h1><span class="flag">&#127475;&#127476;</span> Norsk B1 &mdash; My Questions &amp; Answers</h1>
   <div class="pdf-meta">${escapeHtml(title)} &middot; Exported ${new Date().toLocaleDateString()}</div>
+  <div class="pdf-meta">Key vocabulary in your answers is <span class="pdf-word pdf-key">highlighted</span> &mdash; hover a word to see its English meaning.</div>
   <div class="pdf-motivation">${motivation}</div>
   <div class="pdf-progress-row">
     <span class="pdf-progress-chip total">📚 ${totalCount} questions</span>
