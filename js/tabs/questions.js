@@ -296,7 +296,7 @@
                     return `<span class="pdf-word${isKey ? ' pdf-key' : ''}"${tip} data-s="${si}" data-w="${wi}">${escapeHtml(w)}</span>`;
                   })
                   .join(' ');
-                return `<li data-sentence="${si}" data-text="${escapeHtml(s)}"><span class="pdf-no">${wordsHTML}</span><span class="pdf-en">${enOf(s)}</span></li>`;
+                return `<li data-sentence="${si}" data-text="${escapeHtml(s)}"><span class="pdf-no">${wordsHTML}<span class="pdf-sent-btns"><button class="pdf-sent-btn" onclick="pdfPlaySentence('${playId}',${si},false)" title="Play this sentence">▶</button><button class="pdf-sent-btn" onclick="pdfPlaySentence('${playId}',${si},true)" title="Repeat this sentence until stopped">🔁</button></span></span><span class="pdf-en">${enOf(s)}</span></li>`;
               })
               .join('') +
             '</ul>';
@@ -430,6 +430,13 @@
   .pdf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
   .pdf-answer-list { margin: 0; padding-left: 0; list-style: none; }
   .pdf-answer-list li { margin-bottom: 4px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .pdf-sent-btns { margin-left: 6px; white-space: nowrap; }
+  .pdf-sent-btn { font-size: 0.8rem; border: none; background: #eef2ff; border-radius: 6px; cursor: pointer; padding: 2px 6px; margin-right: 3px; opacity: 0.75; }
+  .pdf-sent-btn:hover { opacity: 1; }
+  #pdfPrevBtn, #pdfNextBtn { background: #eef2ff; color: #4338ca; }
+  #pdfLoopBtn { background: #f1f5f9; color: #475569; }
+  #pdfLoopBtn.on { background: #16a34a; color: #fff; }
+  .pdf-controls select { font-family: inherit; font-size: 0.85rem; padding: 7px 6px; border-radius: 8px; border: 1px solid #cbd5e1; }
   .pdf-en { color: #475569; font-weight: 400; font-style: italic; }
   .pdf-question .pdf-en, .pdf-followup-q .pdf-en { font-weight: 600; }
   .pdf-answer-done .pdf-answer-list li .pdf-en { color: #475569; font-weight: 400; }
@@ -484,13 +491,22 @@
     * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     body { padding: 0; }
     .pdf-item { break-inside: avoid; }
-    .pdf-controls, .pdf-listen-btn { display: none; }
+    .pdf-controls, .pdf-listen-btn, .pdf-sent-btns { display: none; }
   }
 </style>
 </head>
 <body>
   <div class="pdf-controls">
     <button id="pdfPlayAllBtn" onclick="pdfPlayAll()">▶ Play All</button>
+    <button id="pdfPrevBtn" onclick="pdfJumpSentence(-1)" title="Back to the start of this sentence (press again for the previous one)">⏮ Sentence</button>
+    <button id="pdfNextBtn" onclick="pdfJumpSentence(1)" title="Skip to the next sentence">Sentence ⏭</button>
+    <button id="pdfLoopBtn" onclick="pdfToggleLoop()" title="Repeat the current sentence until you turn this off">🔁 Repeat: off</button>
+    <select id="pdfSpeed" onchange="pdfSetSpeed(this.value)" title="Speech speed">
+      <option value="0.3">0.3× slower</option>
+      <option value="0.42" selected>Normal</option>
+      <option value="0.6">Faster</option>
+      <option value="0.8">Fastest</option>
+    </select>
     <button id="pdfStopBtn" onclick="pdfStop()">⏹ Stop</button>
     <button id="pdfPrintBtn" onclick="window.print()">🖨 Print / Save PDF</button>
   </div>
@@ -531,7 +547,8 @@
       // span via SpeechSynthesisUtterance.onboundary (karaoke-style).
       function pdfPlaybackScript() {
         return `
-  const SLNC_WORD = 250, SLNC_WORD_REPEAT = 150, SLNC_LINE = 550, SLNC_SECTION = 1200, RATE = 0.42;
+  const SLNC_WORD = 250, SLNC_WORD_REPEAT = 150, SLNC_LINE = 550, SLNC_SECTION = 1200;
+  let RATE = 0.42, loopSentence = false;
   let queue = [], index = 0, stopped = true, paused = false, runId = 0;
 
   function pause(ms, id) {
@@ -563,7 +580,7 @@
           words.forEach((wordEl, wi) => {
             const isLastWord = wi === words.length - 1;
             const stepPause = isLastWord ? (isLastSentence ? SLNC_SECTION : SLNC_LINE) : wordPause;
-            q.push({ playId, type: 'word', wordEl, pause: stepPause });
+            q.push({ playId, type: 'word', wordEl, pause: stepPause, pass, si, first: wi === 0, last: isLastWord });
           });
         });
       }
@@ -609,6 +626,13 @@
       if (!okAfterSpeak || stopped || paused) return;
       const okAfterPause = await pause(step.pause || SLNC_LINE, id);
       if (!okAfterPause || stopped || paused) return;
+      if (loopSentence && step.type === 'word' && step.last) {
+        // Repeat: jump back to the first word of this sentence.
+        let j = index;
+        while (j > 0 && !queue[j].first) j--;
+        index = j;
+        continue;
+      }
       index++;
     }
     if (id === runId) pdfStop();
@@ -651,6 +675,59 @@
     // speak() called synchronously right after cancel() can be silently
     // dropped in some browsers (notably Chrome) — defer to the next tick.
     if (!paused) setTimeout(() => runQueue(thisRunId), 50);
+  }
+
+  function pdfSetSpeed(v) { RATE = +v; }
+
+  function setLoop(on) {
+    loopSentence = on;
+    const b = document.getElementById('pdfLoopBtn');
+    if (b) {
+      b.textContent = '🔁 Repeat: ' + (on ? 'on' : 'off');
+      b.classList.toggle('on', on);
+    }
+  }
+  function pdfToggleLoop() { setLoop(!loopSentence); }
+
+  // Plays a single answer sentence (word by word, highlighted). With loop=true it
+  // turns Repeat on, so the sentence keeps replaying until stopped or toggled off.
+  function pdfPlaySentence(playId, si, loop) {
+    const steps = buildQueue().filter(
+      s => s.playId === playId && s.type === 'word' && s.pass === 0 && s.si === si
+    );
+    if (!steps.length) return;
+    if (loop) setLoop(true);
+    queue = steps;
+    index = 0;
+    stopped = false;
+    paused = false;
+    runId++;
+    const thisRunId = runId;
+    updateButtons();
+    updateSeekBar();
+    window.speechSynthesis.cancel();
+    setTimeout(() => runQueue(thisRunId), 50);
+  }
+
+  // dir -1: restart the current sentence, or step back to the previous one if
+  // already at its start. dir +1: skip to the next sentence.
+  function pdfJumpSentence(dir) {
+    if (stopped || !queue.length) return;
+    const starts = [];
+    queue.forEach((s, i) => { if (s.type !== 'word' || s.first) starts.push(i); });
+    const curStart = [...starts].reverse().find(i => i <= index);
+    let target;
+    if (dir < 0) {
+      if (index > curStart) target = curStart;
+      else {
+        const prev = [...starts].reverse().find(i => i < curStart);
+        target = prev === undefined ? 0 : prev;
+      }
+    } else {
+      target = starts.find(i => i > index);
+      if (target === undefined) return;
+    }
+    pdfSeekTo(target);
   }
 
   function pdfPlayItem(playId) {
